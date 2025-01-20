@@ -250,3 +250,6 @@ fabric.properties
 
 # PyPI configuration file
 .pypirc
+
+# Project specific
+/datasets
