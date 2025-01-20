@@ -1,0 +1,30 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="10">
+            <item index="0" class="java.lang.String" itemvalue="mir-surveyors-api" />
+            <item index="1" class="java.lang.String" itemvalue="requests" />
+            <item index="2" class="java.lang.String" itemvalue="navalmartin-mir-db-utils" />
+            <item index="3" class="java.lang.String" itemvalue="navalmartin-mir-aws-utils" />
+            <item index="4" class="java.lang.String" itemvalue="navalmartin_mir_aws_utils" />
+            <item index="5" class="java.lang.String" itemvalue="mir-owners-api" />
+            <item index="6" class="java.lang.String" itemvalue="navalmartin-mir-persistence-layer-utils" />
+            <item index="7" class="java.lang.String" itemvalue="navalmartin_mir_db_utils" />
+            <item index="8" class="java.lang.String" itemvalue="pinecone" />
+            <item index="9" class="java.lang.String" itemvalue="pytest" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="N813" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
