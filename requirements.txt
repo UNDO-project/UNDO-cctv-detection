@@ -1,2 +1,6 @@
+pillow-heif==0.21.0
+pillow==11.1.0
+loguru==0.7.3
+
 ruff==0.6.4
 pre-commit==3.8.0
