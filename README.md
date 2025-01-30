@@ -24,6 +24,26 @@ Install the dependencies for this project:
 pip install -r requirements.txt
 ```
 
+## Image labelling
+To label images you need to have [Docker](https://www.docker.com) and [label-studio](https://labelstud.io) installed.
+
+From a terminal run the following to pull the latest label-studio image:
+
+```commandline
+docker pull heartexlabs/label-studio:latest
+```
+
+To run the container:
+
+```commandline
+docker run -it -p 8080:8080 -v $(pwd)/mydata:/label-studio/data heartexlabs/label-studio:latest
+```
+
+Open your web browser and navigate to http://localhost:8080.
+Upon first access, you’ll be prompted to create a username and password. 
+This account is for local use only and does not require any external registration.
+
+
 ## Testing 
 In order to run the tests first:
 
