@@ -4,10 +4,12 @@ import pandas as pd
 
 
 def load_camera_data(csv_path: Path) -> List[Tuple[float, float, str]]:
-    """Load camera data from a CSV file and extract valid URLs with coordinates."""
+    """Load camera data from a CSV file and extract valid unique URLs with coordinates."""
     df = pd.read_csv(csv_path)
-    cameras = []
-    for _, row in df.iterrows():
-        if pd.notna(row["url"]):  # Ensure the URL is not missing
-            cameras.append((row["latitude"], row["longitude"], row["url"]))
+    df = df.dropna(subset=["url"])  # Remove rows where URL is missing
+    df = df.drop_duplicates(subset=["url"])  # Keep only unique URLs
+
+    cameras = [
+        (row["latitude"], row["longitude"], row["url"]) for _, row in df.iterrows()
+    ]
     return cameras
