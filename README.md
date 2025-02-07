@@ -44,6 +44,9 @@ Upon first access, you’ll be prompted to create a username and password.
 This account is for local use only and does not require any external registration.
 
 
+### Disclaimer
+Some images used in this project come from the following dataset
+
 ## Testing 
 In order to run the tests first:
 
