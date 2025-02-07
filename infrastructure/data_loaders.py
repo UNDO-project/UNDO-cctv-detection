@@ -6,7 +6,8 @@ from domain.camera import CameraDataFromCsv
 
 
 class CameraDataLoader:
-    def load_camera_data(self, csv_path: Path) -> List[CameraDataFromCsv]:
+    @staticmethod
+    def load_camera_data(csv_path: Path) -> List[CameraDataFromCsv]:
         """
         Load camera data from a CSV file and extract valid unique URLs with coordinates.
         :param csv_path: The Path object to the csv file.
