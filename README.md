@@ -3,7 +3,7 @@
 To run this project you need to create a virtual environment. Open up a terminal and type the following:
 
 ```commandline
-python3.12 -m venv venv
+python3.11 -m venv venv
 ```
 
 Activate the newly created env:
