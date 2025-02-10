@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class DataSplitter(ABC):
+class DatasetSplitter(ABC):
     @abstractmethod
     def split(self, dataset, train_ratio: float, val_ratio: float):
         """
