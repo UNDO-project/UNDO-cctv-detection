@@ -253,6 +253,9 @@ fabric.properties
 
 # Project specific
 /datasets
+/runs
+/presentation/*.pt
+data.yaml
 
 # MacOs stuff
 .DS_Store
