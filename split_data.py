@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
     # Define dataset metadata: number of classes and class names.
     nc = 2
-    names = ["CCTV", "CCTV-SIGN"]
+    names = ["CCTV", "CCTV-SIGNS"]
 
     # Create the data.yaml file in the project root.
     output_yaml_path = project_root / "data.yaml"
