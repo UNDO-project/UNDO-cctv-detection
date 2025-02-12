@@ -2,6 +2,7 @@ import torch
 from ultralytics import YOLO
 from loguru import logger
 
+from config import BATCH_SIZE
 from domain.services.model_trainer import ModelTrainer
 
 
@@ -55,4 +56,19 @@ class YoloUltralyticsTrainer(ModelTrainer):
     def train(self, train_loader, val_loader, device):
         # Note: Ultralytics handles device selection internally (and often chooses the best available one).
         logger.info(f"Training with Ultralytics YOLO on device: {device}")
-        self.model.train(data=self.data_config, epochs=self.epochs, imgsz=self.img_size)
+        self.model.train(
+            data=self.data_config,
+            epochs=self.epochs,
+            imgsz=self.img_size,
+            batch=BATCH_SIZE,  # Lower batch size for a small dataset
+            lr0=0.005,  # Reduced initial learning rate
+            weight_decay=0.001,  # Increased regularization to mitigate overfitting
+            mosaic=0.8,  # Slightly reduced mosaic augmentation
+            mixup=0.1,  # Apply a small mixup augmentation factor
+            freeze=[
+                0,
+                1,
+                2,
+                3,
+            ],  # Freeze the early layers to leverage pretrained features
+        )
