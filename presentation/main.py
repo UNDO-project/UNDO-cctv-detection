@@ -9,7 +9,7 @@ from infrastructure.trainers import YoloUltralyticsTrainer
 
 def main():
     # Get data.yaml from project root
-    data_config = str(Path(PROJECT_ROOT / "data.yaml"))
+    data_config = Path(PROJECT_ROOT / "data.yaml")
 
     model_weights = "yolov8n.pt"
 

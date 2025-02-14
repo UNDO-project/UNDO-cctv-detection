@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch
 from ultralytics import YOLO
 from loguru import logger
@@ -38,7 +40,7 @@ class YoloTrainer(ModelTrainer):
 
 class YoloUltralyticsTrainer(ModelTrainer):
     def __init__(
-        self, model_weights: str, data_config: str, epochs: int, img_size: int = 640
+        self, model_weights: str, data_config: Path, epochs: int, img_size: int = 640
     ):
         """
         :param model_weights: Path to a YOLO model weight file or a model name (e.g., 'yolov8n.pt').
