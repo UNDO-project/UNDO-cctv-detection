@@ -1,41 +1,10 @@
 from pathlib import Path
 
-import torch
 from ultralytics import YOLO
 from loguru import logger
 
 from config import BATCH_SIZE
 from domain.services.model_trainer import ModelTrainer
-
-
-class YoloTrainer(ModelTrainer):
-    def __init__(self, model, optimizer, num_epochs):
-        self.model = model
-        self.optimizer = optimizer
-        self.num_epochs = num_epochs
-
-    def train(self, train_loader, val_loader, device):
-        self.model.to(device)
-        logger.info(f"Training on device: {device}")
-        for epoch in range(self.num_epochs):
-            self.model.train()
-            total_loss = 0.0
-            for images, targets in train_loader:
-                # Move the batch to the device:
-                images = [img.to(device) for img in images]
-                targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-
-                loss_dict = self.model(images, targets)
-                # Use tensor operations to get the sum:
-                losses = torch.stack(list(loss_dict.values())).sum()
-                total_loss += losses.item()
-
-                self.optimizer.zero_grad()
-                losses.backward()
-                self.optimizer.step()
-            logger.info(
-                f"Epoch {epoch + 1}/{self.num_epochs} completed, loss: {total_loss:.4f}"
-            )
 
 
 class YoloUltralyticsTrainer(ModelTrainer):
