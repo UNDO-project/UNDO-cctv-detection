@@ -256,6 +256,7 @@ fabric.properties
 /runs
 /presentation/*.pt
 data.yaml
+tester.py
 
 # MacOs stuff
 .DS_Store
