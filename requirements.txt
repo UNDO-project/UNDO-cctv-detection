@@ -3,8 +3,8 @@ pillow==11.1.0
 loguru==0.7.3
 playwright==1.47.0
 pandas==2.2.3
-torch==2.6.0
-torchvision==0.21.0
+torch==2.7.0
+torchvision==0.22.0
 scikit-learn==1.6.1
 ultralytics==8.3.74
 pyyaml==6.0.2
