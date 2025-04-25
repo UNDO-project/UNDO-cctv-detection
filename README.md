@@ -45,7 +45,8 @@ This account is for local use only and does not require any external registratio
 
 
 ### Disclaimer
-Some images used in this project come from the dataset of the [Fuziih CCTV-Exposure](https://github.com/Fuziih/cctv-exposure/tree/main)
+Although most images used in training have been collected through ethnographic research,
+some images used in this project come from the dataset of the [Fuziih CCTV-Exposure](https://github.com/Fuziih/cctv-exposure/tree/main)
 
 ## Testing 
 In order to run the tests first:
