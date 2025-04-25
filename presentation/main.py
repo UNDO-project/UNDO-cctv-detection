@@ -4,10 +4,30 @@ import torch.optim
 from loguru import logger
 
 from config import PROJECT_ROOT
+from infrastructure.dataset_preparer_impl import SklearnDatasetPreparer
 from infrastructure.trainers import YoloUltralyticsTrainer
 
 
 def main():
+    base_dataset_dir = Path(PROJECT_ROOT) / "datasets"
+    source_images = base_dataset_dir / "images"
+    source_labels = base_dataset_dir / "labels"
+
+    output_images = Path(PROJECT_ROOT) / "datasets" / "ultralytics" / "images"
+    output_labels = Path(PROJECT_ROOT) / "datasets" / "ultralytics" / "labels"
+
+    dataset_preparer = SklearnDatasetPreparer()
+    dataset_preparer.prepare_ultralytics_dataset(
+        source_images=source_images,
+        source_labels=source_labels,
+        output_images=output_images,
+        output_labels=output_labels,
+        train_ratio=0.8,
+        val_ratio=0.1,
+        move_files=True,
+    )
+    logger.info("Dataset is prepared and ready for training.")
+
     # Get data.yaml from project root
     data_config = Path(PROJECT_ROOT / "data.yaml")
 
