@@ -43,10 +43,58 @@ Open your web browser and navigate to http://localhost:8080.
 Upon first access, you’ll be prompted to create a username and password. 
 This account is for local use only and does not require any external registration.
 
+## Model training results
+
+### Overview
+We trained a YOLO model on our custom dataset for 20 epochs. The final evaluation metrics show strong performance with high precision, recall, and mAP, particularly at an IoU threshold of 0.5.
+
+| Metric             | Value    |
+|--------------------|----------|
+| Epochs             | 20       |
+| Training Loss      | 4.99     |
+| Validation Loss    | 5.66     |
+| Precision (B)      | 0.841    |
+| Recall (B)         | 0.838    |
+| mAP@0.5 (B)        | 0.873    |
+| mAP@0.5:0.95 (B)   | 0.415    |
+
+### Loss curves
+Training and validation losses decreased steadily across epochs, showing no major overfitting:
+
+- **Training Loss:** Decreased from ~8.0 to ~5.0.
+- **Validation Loss:** Decreased from ~6.9 to ~5.7.
+- **Gap between train and validation loss remained stable**, suggesting good generalization.
+
+### Detection metrics
+- **Precision** and **recall** improved steadily, reaching balanced high scores (above 83%).
+- **mAP@0.5** (object detection quality at 0.5 IoU threshold) reached **87%**.
+- **mAP@0.5–0.95** (stricter localization accuracy) reached **41%**, indicating moderate room for improvement in bounding box precision.
+
+### Recommendations
+- Continue training for more epochs to potentially achieve higher mAP.
+- Introduce additional data augmentations (e.g., mosaic, mixup) to improve generalization.
+- Perform hyperparameter tuning (learning rate, batch size) for further optimization.
+- Review dataset annotations to ensure bounding box accuracy for better IoU scores.
+
+### Visualizations
+Results
+![Results](samples/results.png)
+
+Training batch images
+![Train batch images sample 1](samples/train_batch2.jpg)
+![Train batch images sample 2](samples/train_batch351.jpg)
+
+Valuation prediction samples
+![Valuation batch sample 1](samples/val_batch0_pred.jpg)
+![Valuation batch sample 2](samples/val_batch1_pred.jpg)
+
+---
 
 ### Disclaimer
 Although most images used in training have been collected through ethnographic research,
 some images used in this project come from the dataset of the [Fuziih CCTV-Exposure](https://github.com/Fuziih/cctv-exposure/tree/main)
+
+> Contact us if you want access to the dataset or the weights of the model.
 
 ## Testing 
 In order to run the tests first:
