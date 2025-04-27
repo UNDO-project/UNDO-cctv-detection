@@ -2,8 +2,8 @@ from pathlib import Path
 
 from loguru import logger
 
-from infrastructure.data_loaders import CameraDataLoader
-from infrastructure.image_scraper import ImageScraper
+from src.infrastructure.data_loaders import CameraDataLoader
+from src.infrastructure.image_scraper import ImageScraper
 
 
 class CameraImageDownloader:

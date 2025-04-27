@@ -4,8 +4,8 @@ from typing import List
 from loguru import logger
 from playwright.sync_api import sync_playwright
 
-from domain.camera import CameraDataFromCsv
-from config import REJECT_ALL, REJECT_ALL_GR
+from src.config import REJECT_ALL, REJECT_ALL_GR
+from src.domain.camera import CameraDataFromCsv
 
 
 class ImageScraper:

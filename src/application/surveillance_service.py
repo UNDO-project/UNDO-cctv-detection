@@ -1,4 +1,4 @@
-from domain.services.distance_calculator import DistanceCalculator, DoriLevel
+from src.domain.services.distance_calculator import DistanceCalculator, DoriLevel
 
 
 class SurveillanceService:

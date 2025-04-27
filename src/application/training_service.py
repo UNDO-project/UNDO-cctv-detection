@@ -1,9 +1,9 @@
 import torch.backends.mps
 from torch.utils.data import DataLoader
 
-from config import TRAIN_RATIO, VAL_RATIO, BATCH_SIZE
-from domain.services.data_splitter import DatasetSplitter
-from domain.services.model_trainer import ModelTrainer
+from src.config import TRAIN_RATIO, VAL_RATIO, BATCH_SIZE
+from src.domain.services.data_splitter import DatasetSplitter
+from src.domain.services.model_trainer import ModelTrainer
 
 
 class TrainingService:

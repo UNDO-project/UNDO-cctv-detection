@@ -1,6 +1,6 @@
 from sklearn.model_selection import train_test_split
 
-from domain.services.data_splitter import DatasetSplitter
+from src.domain.services.data_splitter import DatasetSplitter
 
 
 class SklearnDatasetSplitter(DatasetSplitter):

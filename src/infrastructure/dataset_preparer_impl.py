@@ -2,8 +2,8 @@ import shutil
 from pathlib import Path
 from loguru import logger
 
-from domain.services.dataset_preparer import DatasetPreparer
-from infrastructure.splitters import SklearnDatasetSplitter
+from src.domain.services.dataset_preparer import DatasetPreparer
+from src.infrastructure.splitters import SklearnDatasetSplitter
 
 
 class SklearnDatasetPreparer(DatasetPreparer):
