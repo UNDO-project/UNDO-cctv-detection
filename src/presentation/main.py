@@ -3,9 +3,9 @@ from pathlib import Path
 import torch.optim
 from loguru import logger
 
-from config import PROJECT_ROOT
-from infrastructure.dataset_preparer_impl import SklearnDatasetPreparer
-from infrastructure.trainers import YoloUltralyticsTrainer
+from src.config import PROJECT_ROOT
+from src.infrastructure.dataset_preparer_impl import SklearnDatasetPreparer
+from src.infrastructure.trainers import YoloUltralyticsTrainer
 
 
 def main():

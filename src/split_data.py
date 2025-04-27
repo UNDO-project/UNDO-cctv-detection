@@ -7,7 +7,7 @@ import yaml
 from loguru import logger
 from sklearn.model_selection import train_test_split
 
-from config import IMAGES_DIR, PROJECT_ROOT, LABELS_DIR, TRAIN_RATIO
+from src.config import IMAGES_DIR, PROJECT_ROOT, LABELS_DIR, TRAIN_RATIO
 
 
 def split_dataset(

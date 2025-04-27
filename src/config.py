@@ -12,7 +12,7 @@ BATCH_SIZE: int = 4
 # ------------------- Scraper config -------------------#
 CSV_FILE: Path = Path("../../datasets/cctv-aware-jyvaskyla.csv")
 OUTPUT_DIR: Path = Path(
-    "../datasets/screenshots"
+    "../../datasets/screenshots"
 )  # Folder to save screenshots of images
 REJECT_ALL: str = "Reject all"
 REJECT_ALL_GR: str = "Απόρριψη όλων"

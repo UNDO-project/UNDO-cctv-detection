@@ -3,7 +3,7 @@ from PIL import Image
 from loguru import logger
 import pillow_heif
 
-from domain.services.image_converter import ImageConverter
+from src.domain.services.image_converter import ImageConverter
 
 
 class PillowImageConverter(ImageConverter):

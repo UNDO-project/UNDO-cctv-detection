@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from domain.services.image_converter import ImageConverter
+from src.domain.services.image_converter import ImageConverter
 
 
 class DatasetPreparation:

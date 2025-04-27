@@ -7,8 +7,8 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor, FasterRC
 from ultralytics import YOLO
 from loguru import logger
 
-from config import BATCH_SIZE
-from domain.services.model_trainer import ModelTrainer
+from src.config import BATCH_SIZE
+from src.domain.services.model_trainer import ModelTrainer
 
 
 class YoloUltralyticsTrainer(ModelTrainer):
