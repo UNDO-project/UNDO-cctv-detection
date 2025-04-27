@@ -70,12 +70,6 @@ Training and validation losses decreased steadily across epochs, showing no majo
 - **mAP@0.5** (object detection quality at 0.5 IoU threshold) reached **87%**.
 - **mAP@0.5–0.95** (stricter localization accuracy) reached **41%**, indicating moderate room for improvement in bounding box precision.
 
-### Recommendations
-- Continue training for more epochs to potentially achieve higher mAP.
-- Introduce additional data augmentations (e.g., mosaic, mixup) to improve generalization.
-- Perform hyperparameter tuning (learning rate, batch size) for further optimization.
-- Review dataset annotations to ensure bounding box accuracy for better IoU scores.
-
 ### Visualizations
 Results
 ![Results](samples/results.png)
