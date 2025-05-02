@@ -254,7 +254,7 @@ fabric.properties
 # Project specific
 /datasets
 /runs
-/presentation/*.pt
+/src/presentation/*.pt
 data.yaml
 tester.py
 
