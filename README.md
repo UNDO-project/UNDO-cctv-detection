@@ -90,6 +90,16 @@ some images used in this project come from the dataset of the [Fuziih CCTV-Expos
 
 > Contact us if you want access to the dataset or the weights of the model.
 
+## User Interface
+The application has a User Interface for uploading images and using the custom trained YOLOv8 to detect CCTV images.
+In order to do that `cd` into `src/presentation`, open upn a terminal and use:
+
+```commandline
+python main_ui.py
+```
+
+Then open up a browser and visit: `http://127.0.0.1:7860`.
+
 ## Testing 
 In order to run the tests first:
 
