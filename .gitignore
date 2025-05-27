@@ -257,6 +257,7 @@ fabric.properties
 /src/presentation/*.pt
 data.yaml
 tester.py
+app.py
 
 # MacOs stuff
 .DS_Store
