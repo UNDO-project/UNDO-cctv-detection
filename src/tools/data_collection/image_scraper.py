@@ -59,11 +59,15 @@ class ImageScraper:
                             page.wait_for_load_state("networkidle")
                             cookies_rejected = True  # Mark cookies as rejected
                             logger.info("Cookies rejected successfully.")
-                        except Exception as e:
-                            # If the "Reject all" button is not found, skip
-                            logger.info(
-                                f"Cookie consent not shown or already rejected. {e}"
+                        except TimeoutError:
+                            logger.debug(
+                                "Cookie consent dialog not found (likely not shown)"
                             )
+                        except Exception as e:
+                            logger.warning(
+                                f"Unexpected error handling cookie consent: {e}"
+                            )
+                            raise
 
                     page.wait_for_load_state("networkidle")
                     page.wait_for_timeout(PAGE_SETTLE_TIMEOUT_MS)
