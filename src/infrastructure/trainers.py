@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import torch
 from torch import optim
@@ -14,7 +15,7 @@ from src.domain.services.model_trainer import ModelTrainer
 class YoloUltralyticsTrainer(ModelTrainer):
     def __init__(
         self, model_weights: str, data_config: Path, epochs: int, img_size: int = 640
-    ):
+    ) -> None:
         """
         :param model_weights: Path to a YOLO model weight file or a model name (e.g., 'yolov8n.pt').
         :param data_config: Path to a YAML file with the data configuration for training.
@@ -28,7 +29,7 @@ class YoloUltralyticsTrainer(ModelTrainer):
         # Initialize YOLO model from ultralytics
         self.model = YOLO(model_weights)
 
-    def train(self, train_loader, val_loader, device):
+    def train(self, train_loader: Any, val_loader: Any, device: Any) -> None:
         # Note: Ultralytics handles device selection internally (and often chooses the best available one).
         logger.info(f"Training with Ultralytics YOLO on device: {device}")
         self.model.train(
@@ -52,7 +53,7 @@ class YoloUltralyticsTrainer(ModelTrainer):
 class FasterRCNNTrainer(ModelTrainer):
     def __init__(
         self, num_classes: int, epochs: int = 10, learning_rate: float = 0.005
-    ):
+    ) -> None:
         """
         Initialize the Faster R-CNN trainer with model and training parameters.
         :param num_classes: Number of classes (including background)
@@ -77,7 +78,7 @@ class FasterRCNNTrainer(ModelTrainer):
         model.roi_heads.box_predictor = FastRCNNPredictor(in_features, self.num_classes)
         return model
 
-    def train(self, train_loader, val_loader, device) -> None:
+    def train(self, train_loader: Any, val_loader: Any, device: Any) -> None:
         """
         Train the Faster R-CNN model using the provided dataloaders on the specified device.
         :param train_loader: Training dataloader
@@ -113,7 +114,7 @@ class FasterRCNNTrainer(ModelTrainer):
             # Optionally, evaluate on the validation set after each epoch
             self.evaluate(val_loader, device)
 
-    def evaluate(self, val_loader, device) -> None:
+    def evaluate(self, val_loader: Any, device: Any) -> None:
         """
         Evaluate the model on the validation set and log the loss.
         :param val_loader: Validation dataloader
