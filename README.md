@@ -100,18 +100,50 @@ python main_ui.py
 
 Then open up a browser and visit: `http://127.0.0.1:7860`.
 
-## Testing 
-In order to run the tests first:
+## Testing
 
+This project uses pytest for comprehensive testing with >60% code coverage.
+
+### Running Tests
+
+Run all tests:
 ```commandline
-pip install -r requiremens_tests.txt
+pytest tests/
 ```
 
-Then from the root project run:
-
+Run tests with coverage report:
 ```commandline
-bash ./local_test_pipeline.sh
+pytest tests/ --cov=src --cov-report=term-missing
 ```
+
+Run tests with HTML coverage report:
+```commandline
+pytest tests/ --cov=src --cov-report=html
+# Open htmlcov/index.html in your browser
+```
+
+Run specific test file:
+```commandline
+pytest tests/domain/services/test_distance_calculator.py
+```
+
+### Test Structure
+
+The test suite mirrors the source code structure:
+```
+tests/
+├── domain/           # Domain layer tests (100% coverage)
+├── application/      # Application layer tests (100% coverage)
+├── infrastructure/   # Infrastructure layer tests (90%+ coverage)
+└── presentation/     # Presentation layer tests
+```
+
+### Test Coverage
+
+Current coverage: **65.13%** (120 tests)
+- Domain services: 100% coverage
+- Application services: 100% coverage
+- Infrastructure layer: 90%+ coverage
 
 ## Code formatting
 
