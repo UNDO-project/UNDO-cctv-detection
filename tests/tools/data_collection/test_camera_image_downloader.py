@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import Mock
 from pathlib import Path
 
-from src.application.camera_image_downloader import CameraImageDownloader
+from tools.data_collection.camera_image_downloader import CameraImageDownloader
 from src.domain.camera import CameraDataFromCsv
 
 

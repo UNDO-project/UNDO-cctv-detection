@@ -3,7 +3,7 @@ from pathlib import Path
 from loguru import logger
 
 from src.infrastructure.data_loaders import CameraDataLoader
-from src.infrastructure.image_scraper import ImageScraper
+from tools.data_collection.image_scraper import ImageScraper
 
 
 class CameraImageDownloader:
