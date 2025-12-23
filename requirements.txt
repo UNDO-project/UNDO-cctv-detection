@@ -14,3 +14,9 @@ gradio==5.29.0
 
 ruff==0.9.10
 pre-commit==3.8.0
+
+# Testing dependencies
+pytest==8.3.4
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+pytest-asyncio==0.24.0
