@@ -16,4 +16,4 @@ repos:
   hooks:
     - id: mypy
       additional_dependencies: [types-Pillow, types-PyYAML]
-      args: [--strict]
+      args: [--strict, --config-file=mypy.ini]
