@@ -7,7 +7,8 @@ from src.domain.services.image_converter import ImageConverter
 
 
 class PillowImageConverter(ImageConverter):
-    def convert_heic_to_jpg(self, input_folder: Path, output_folder: Path):
+    @staticmethod
+    def convert_heic_to_jpg(input_folder: Path, output_folder: Path) -> None:
         """
         Convert all HEIC images in a folder to JPG format.
         :param input_folder: Path to input folder
@@ -28,4 +29,4 @@ class PillowImageConverter(ImageConverter):
                 logger.info(f"Converted: {heic_file} -> {output_path}")
             except Exception as e:
                 logger.error(f"Failed to convert {heic_file.name}: {e}")
-                raise e
+                raise
