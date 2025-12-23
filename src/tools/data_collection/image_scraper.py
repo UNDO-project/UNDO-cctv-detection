@@ -7,6 +7,11 @@ from playwright.sync_api import sync_playwright
 from src.config import REJECT_ALL, REJECT_ALL_GR
 from src.domain.camera import CameraDataFromCsv
 
+# Timeout constants for browser operations (in milliseconds)
+BROWSER_LOAD_TIMEOUT_MS = 20000
+COOKIE_DIALOG_TIMEOUT_MS = 5000
+PAGE_SETTLE_TIMEOUT_MS = 5000
+
 
 class ImageScraper:
     def __init__(self, output_dir: Path, headless: bool = False):
@@ -32,9 +37,7 @@ class ImageScraper:
                     self.output_dir / f"camera_{camera.latitude}_{camera.longitude}.png"
                 )
                 try:
-                    page.goto(
-                        camera.url, timeout=20000
-                    )  # Allow more time for page navigation
+                    page.goto(camera.url, timeout=BROWSER_LOAD_TIMEOUT_MS)
 
                     if not cookies_rejected:
                         # XPath to match buttons with "Reject all"labels
@@ -47,7 +50,9 @@ class ImageScraper:
                         )
                         try:
                             # Wait for the "Reject all" button (if it exists)
-                            page.wait_for_selector(reject_button_xpath, timeout=5000)
+                            page.wait_for_selector(
+                                reject_button_xpath, timeout=COOKIE_DIALOG_TIMEOUT_MS
+                            )
                             # Click the "Reject all" button
                             page.click(reject_button_xpath)
                             # Allow the page to load after rejecting cookies
@@ -60,12 +65,8 @@ class ImageScraper:
                                 f"Cookie consent not shown or already rejected. {e}"
                             )
 
-                    page.wait_for_load_state(
-                        "networkidle"
-                    )  # Wait for the network to go idle
-                    page.wait_for_timeout(
-                        5000
-                    )  # Wait for an additional 5 seconds as a buffer
+                    page.wait_for_load_state("networkidle")
+                    page.wait_for_timeout(PAGE_SETTLE_TIMEOUT_MS)
 
                     page.screenshot(path=str(filename))
                     logger.success(f"Saved: {filename}")

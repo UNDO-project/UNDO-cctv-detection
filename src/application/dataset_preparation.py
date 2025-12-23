@@ -7,7 +7,7 @@ class DatasetPreparation:
     def __init__(self, image_converter: ImageConverter):
         self.image_converter = image_converter
 
-    def prepare_dateset(self, input_folder: Path, output_folder: Path) -> None:
+    def prepare_dataset(self, input_folder: Path, output_folder: Path) -> None:
         """
         Prepare the dataset by converting all HEIC images to JPG format.
         :param input_folder: The Path object representing input folder

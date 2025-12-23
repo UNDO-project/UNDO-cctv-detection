@@ -20,7 +20,7 @@ class TrainingService:
         val_ratio: float = VAL_RATIO,
         batch_size: int = BATCH_SIZE,
     ):
-        train_data, val_data, test_data = self.dataset_splitter.split(
+        train_data, val_data, _test_data = self.dataset_splitter.split(
             self.dataset, train_ratio, val_ratio
         )
         train_loader = DataLoader(
@@ -30,7 +30,8 @@ class TrainingService:
             val_data, batch_size, shuffle=True, collate_fn=lambda x: tuple(zip(*x))
         )
 
-        # TODO: Use test data for evaluation
+        # Note: test_data is available but not currently used in training workflow.
+        # Future enhancement: Add post-training evaluation using test set.
 
         if torch.backends.mps.is_available():
             device = torch.device("mps")

@@ -6,10 +6,6 @@ export PYTHONPATH
 cd "$(dirname "$0")" || exit
 
 echo "Running application layer tests"
-echo "----Running camera image downloader tests"
-pytest tests/application/test_camera_image_downloader.py --no-cov
-echo "Done..."
-echo "==============================================="
 
 echo "----Running dataset preparation tests"
 pytest tests/application/test_dataset_preparation.py --no-cov
@@ -64,8 +60,8 @@ pytest tests/presentation/test_main_ui.py --no-cov
 echo "Done..."
 echo "==============================================="
 
-echo "Running split data tests"
-pytest tests/test_split_data.py --no-cov
+echo "----Running camera image downloader tests"
+pytest tests/tools/data_collection/test_camera_image_downloader.py --no-cov
 echo "Done..."
 echo "==============================================="
 

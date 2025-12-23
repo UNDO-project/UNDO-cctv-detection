@@ -50,7 +50,7 @@ class TestDatasetPreparation:
         input_folder = Path("/input")
         output_folder = Path("/output")
 
-        service.prepare_dateset(input_folder, output_folder)
+        service.prepare_dataset(input_folder, output_folder)
 
         mock_converter.convert_heic_to_jpg.assert_called_once_with(
             input_folder, output_folder
@@ -71,7 +71,7 @@ class TestDatasetPreparation:
 
         for input_path, output_path in test_cases:
             mock_converter.reset_mock()
-            service.prepare_dateset(input_path, output_path)
+            service.prepare_dataset(input_path, output_path)
 
             mock_converter.convert_heic_to_jpg.assert_called_once_with(
                 input_path, output_path
@@ -84,5 +84,5 @@ class TestDatasetPreparation:
         :param mock_converter: Mocked image converter
         :return: None
         """
-        result = service.prepare_dateset(Path("/input"), Path("/output"))
+        result = service.prepare_dataset(Path("/input"), Path("/output"))
         assert result is None
