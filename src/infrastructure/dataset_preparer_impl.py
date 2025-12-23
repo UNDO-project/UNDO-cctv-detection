@@ -46,7 +46,7 @@ class SklearnDatasetPreparer(DatasetPreparer):
         splits = {
             "train": train_data,
             "val": val_data,
-            "test": test_data,  # You might not use test in training
+            "test": test_data,  # We might not use test in training
         }
 
         # Organize files into the split directories

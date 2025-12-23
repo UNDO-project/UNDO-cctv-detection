@@ -1,10 +1,15 @@
+from typing import Any, Tuple
+
 from sklearn.model_selection import train_test_split
+from torch.utils.data import Dataset
 
 from src.domain.services.data_splitter import DatasetSplitter
 
 
 class SklearnDatasetSplitter(DatasetSplitter):
-    def split(self, dataset, train_ratio: float, val_ratio: float):
+    def split(
+        self, dataset: Any, train_ratio: float, val_ratio: float
+    ) -> Tuple[Dataset, Dataset, Dataset]:
         train_data, temp_data = train_test_split(
             dataset, train_size=train_ratio, random_state=42
         )

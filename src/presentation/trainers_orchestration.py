@@ -8,7 +8,7 @@ from src.infrastructure.dataset_preparer_impl import SklearnDatasetPreparer
 from src.infrastructure.trainers import YoloUltralyticsTrainer
 
 
-def main():
+def main() -> None:
     base_dataset_dir = Path(PROJECT_ROOT) / "datasets"
     source_images = base_dataset_dir / "images"
     source_labels = base_dataset_dir / "labels"

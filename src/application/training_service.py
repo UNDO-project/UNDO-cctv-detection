@@ -1,3 +1,5 @@
+from typing import Any
+
 import torch.backends.mps
 from torch.utils.data import DataLoader
 
@@ -8,8 +10,11 @@ from src.domain.services.model_trainer import ModelTrainer
 
 class TrainingService:
     def __init__(
-        self, dataset, model_trainer: ModelTrainer, dataset_splitter: DatasetSplitter
-    ):
+        self,
+        dataset: Any,
+        model_trainer: ModelTrainer,
+        dataset_splitter: DatasetSplitter,
+    ) -> None:
         self.dataset = dataset
         self.model_trainer = model_trainer
         self.dataset_splitter = dataset_splitter
@@ -19,7 +24,7 @@ class TrainingService:
         train_ratio: float = TRAIN_RATIO,
         val_ratio: float = VAL_RATIO,
         batch_size: int = BATCH_SIZE,
-    ):
+    ) -> None:
         train_data, val_data, _test_data = self.dataset_splitter.split(
             self.dataset, train_ratio, val_ratio
         )
