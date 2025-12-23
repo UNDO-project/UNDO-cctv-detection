@@ -1,5 +1,6 @@
 from enum import Enum
 import math
+from src.domain.exceptions import ValidationError
 
 
 class DoriLevel(Enum):
@@ -42,6 +43,16 @@ class DistanceCalculator:
         :param ppm: Required pixels per meter (DORI standard)
         :return: Maximum distance in meters
         """
+        if sensor_height_px <= 0:
+            raise ValidationError(
+                f"sensor_height_px must be positive, got {sensor_height_px}"
+            )
+        if target_height_m <= 0:
+            raise ValidationError(
+                f"target_height_m must be positive, got {target_height_m}"
+            )
+        if ppm <= 0:
+            raise ValidationError(f"ppm must be positive, got {ppm}")
         return (sensor_height_px * target_height_m) / ppm
 
     @staticmethod
@@ -52,4 +63,10 @@ class DistanceCalculator:
         :param hfov_deg: Horizontal field of view in degrees
         :return: Maximum observation distance in meters
         """
+        if target_width_m <= 0:
+            raise ValidationError(
+                f"target_width_m must be positive, got {target_width_m}"
+            )
+        if not (0 < hfov_deg < 180):
+            raise ValidationError(f"hfov_deg must be in range (0, 180), got {hfov_deg}")
         return target_width_m / (2 * math.tan(math.radians(hfov_deg / 2)))
