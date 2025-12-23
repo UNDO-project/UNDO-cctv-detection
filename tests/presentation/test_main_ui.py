@@ -10,10 +10,25 @@ import numpy as np
 import sys
 
 
-# Mock YOLO before importing main_ui to avoid loading actual model
-with patch("ultralytics.YOLO"):
-    if "src.presentation.main_ui" in sys.modules:
-        del sys.modules["src.presentation.main_ui"]
+# Mock YOLO class before any imports to avoid loading the actual model file
+@pytest.fixture(scope="module", autouse=True)
+def mock_yolo_class():
+    """Mock YOLO class for the entire test module.
+
+    :return: MagicMock instance
+    """
+    with patch("ultralytics.YOLO") as mock_yolo:
+        # Clear cached module if it exists
+        if "src.presentation.main_ui" in sys.modules:
+            del sys.modules["src.presentation.main_ui"]
+
+        # Configure the mock to return a MagicMock instance
+        mock_yolo.return_value = MagicMock()
+
+        # Now import the module with the mock in place
+        import src.presentation.main_ui  # noqa: F401
+
+        yield mock_yolo
 
 
 class TestDetectObjects:
