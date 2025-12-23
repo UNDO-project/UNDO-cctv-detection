@@ -127,6 +127,11 @@ Run specific test file:
 pytest tests/domain/services/test_distance_calculator.py
 ```
 
+Run tests from local script:
+```commandline
+bash local_test_pipeline.sh
+```
+
 ### Test Structure
 
 The test suite mirrors the source code structure:
