@@ -135,8 +135,15 @@ class TestTrainingService:
 
     @patch("torch.backends.mps.is_available", return_value=False)
     @patch("torch.cuda.is_available", return_value=True)
+    @patch("torch.cuda.get_device_name", return_value="Mock CUDA Device")
     def test_run_training_selects_cuda_device_when_mps_unavailable(
-        self, mock_cuda, mock_mps, service, mock_splitter, mock_trainer
+        self,
+        mock_device_name,
+        mock_cuda,
+        mock_mps,
+        service,
+        mock_splitter,
+        mock_trainer,
     ):
         """Test that CUDA device is selected when MPS is unavailable."""
         # Arrange

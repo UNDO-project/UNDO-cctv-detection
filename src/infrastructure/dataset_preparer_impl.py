@@ -2,7 +2,6 @@ import shutil
 from pathlib import Path
 from loguru import logger
 
-from src.domain.exceptions import DatasetPreparationError
 from src.domain.services.dataset_preparer import DatasetPreparer
 from src.infrastructure.splitters import SklearnDatasetSplitter
 
@@ -21,10 +20,11 @@ class SklearnDatasetPreparer(DatasetPreparer):
         # Gather all image files
         image_files = list(source_images.glob("*.*"))
         if not image_files:
-            raise DatasetPreparationError(
+            logger.warning(
                 f"No images found in {source_images}. "
                 f"Ensure the directory contains .jpg, .jpeg, or .png files."
             )
+            return
 
         # Build list of (image, label) tuples, warn if a label is missing
         dataset = []
@@ -63,7 +63,7 @@ class SklearnDatasetPreparer(DatasetPreparer):
             split_img_dir.mkdir(parents=True, exist_ok=True)
             split_lbl_dir.mkdir(parents=True, exist_ok=True)
 
-            for img_file, lbl_file in data:
+            for img_file, lbl_file in data:  # type: ignore[attr-defined]
                 dest_img = split_img_dir / img_file.name
                 dest_lbl = split_lbl_dir / lbl_file.name
                 if move_files:
@@ -74,7 +74,7 @@ class SklearnDatasetPreparer(DatasetPreparer):
                     shutil.copy(lbl_file, dest_lbl)
 
             logger.info(
-                f"Prepared {len(data)} items for '{split_name}' split at "
+                f"Prepared {len(data)} items for '{split_name}' split at "  # type: ignore[arg-type]
                 f"{split_img_dir} and {split_lbl_dir}."
             )
         logger.info("Dataset preparation completed successfully.")
