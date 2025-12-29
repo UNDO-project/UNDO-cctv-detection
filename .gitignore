@@ -254,10 +254,7 @@ fabric.properties
 # Project specific
 /datasets
 /runs
-/src/presentation/*.pt
 data.yaml
-tester.py
-app.py
 
 # MacOs stuff
 .DS_Store

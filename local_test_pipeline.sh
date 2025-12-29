@@ -59,9 +59,9 @@ pytest tests/infrastructure/test_device_selector.py --no-cov
 echo "Done..."
 echo "==============================================="
 
-echo "Running presentation layer tests"
-echo "----Running main ui tests"
-pytest tests/presentation/test_main_ui.py --no-cov
+echo "Running UI layer tests"
+echo "----Running gradio app tests"
+pytest tests/ui/test_gradio_app.py --no-cov
 echo "Done..."
 echo "==============================================="
 

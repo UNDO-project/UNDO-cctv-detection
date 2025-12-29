@@ -70,8 +70,8 @@ all = [
 ]
 
 [project.scripts]
-cctv-ui = "src.presentation.main_ui:launch_ui"
-cctv-train = "src.presentation.trainers_orchestration:main"
+cctv-ui = "app:main"
+cctv-train = "scripts.train_yolo:main"
 
 [project.urls]
 Homepage = "https://github.com/jethronap/cctv_detection"
@@ -84,7 +84,7 @@ Issues = "https://github.com/jethronap/cctv_detection/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*"]
+include = ["src*", "scripts*"]
 exclude = ["src.tools*"]
 
 [tool.setuptools.package-data]

@@ -162,17 +162,14 @@ The application has a User Interface for uploading images and using the custom t
 
 ### Running the UI
 
-Thanks to the centralized configuration system, you can run the application from any directory:
+Thanks to the centralized configuration system and uv, you can run the application easily:
 
-```commandline
-# From project root
-python app.py
+```bash
+# From project root (canonical entry point)
+uv run python app.py
 
-# OR from src/presentation directory
-cd src/presentation && python main_ui.py
-
-# OR from anywhere in the project
-python src/presentation/main_ui.py
+# OR use the console script
+uv run cctv-ui
 ```
 
 Then open up a browser and visit: `http://127.0.0.1:7860`.
@@ -217,12 +214,12 @@ tests/
 ├── domain/           # Domain layer tests (100% coverage)
 ├── application/      # Application layer tests (100% coverage)
 ├── infrastructure/   # Infrastructure layer tests (90%+ coverage)
-└── presentation/     # Presentation layer tests
+└── ui/              # UI layer tests
 ```
 
 ### Test Coverage
 
-Current coverage: **65.13%** (120 tests)
+Current coverage: **65.13%** (137 tests)
 - Domain services: 100% coverage
 - Application services: 100% coverage
 - Infrastructure layer: 90%+ coverage
@@ -252,4 +249,4 @@ MyPy is available for optional local type checking but is NOT part of pre-commit
 mypy src/
 ```
 
-**Note**: We rely on comprehensive test coverage (72%) and Ruff for code quality in the commit workflow. Type hints in the code still provide IDE support and documentation value.
+**Note**: We rely on comprehensive test coverage (65%) and Ruff for code quality in the commit workflow. Type hints in the code still provide IDE support and documentation value.
