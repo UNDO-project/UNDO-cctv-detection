@@ -38,8 +38,8 @@ def main() -> None:
     device = DeviceSelector.get_optimal_device()
     logger.info(f"Training on device: {device}")
 
-    # Train model
-    model_trainer.train(None, None, device)
+    # Train model (YOLO uses data_config from trainer initialization)
+    model_trainer.train(device)
     logger.success("Training complete!")
 
 
