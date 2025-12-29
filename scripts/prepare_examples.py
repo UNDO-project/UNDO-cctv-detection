@@ -9,7 +9,7 @@ import shutil
 from src.config import settings
 
 
-def main():
+def main() -> None:
     """Copy sample images to examples directory.
 
     :return: None
