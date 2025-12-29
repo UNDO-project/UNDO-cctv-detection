@@ -70,6 +70,11 @@ pytest tests/tools/data_collection/test_camera_image_downloader.py --no-cov
 echo "Done..."
 echo "==============================================="
 
+echo "Running configuration settings tests"
+pytest tests/test_config.py --no-cov
+echo "Done..."
+echo "==============================================="
+
 echo ""
 echo "=========================================="
 echo "Running full test suite with coverage"
