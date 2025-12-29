@@ -198,14 +198,29 @@ Current coverage: **65.13%** (120 tests)
 - Application services: 100% coverage
 - Infrastructure layer: 90%+ coverage
 
-## Code formatting
+## Code Quality
 
-This project uses [.pre-commit](https://pre-commit.com) hooks to ensure universal code formatting.
+This project uses automated tools to ensure code quality and consistency.
 
-To install these use:
+### Pre-commit Hooks (Required)
+
+Install pre-commit hooks to automatically check code before committing:
 
 ```commandline
 pre-commit install
 ```
 
-The hooks will run the [ruff](https://docs.astral.sh/ruff/) formatter with every commit.
+The hooks will run:
+- **Ruff linter** - Fast Python linting and code quality checks
+- **Ruff formatter** - Automatic code formatting
+
+### Optional: MyPy Type Checking
+
+MyPy is available for optional local type checking but is NOT part of pre-commit hooks:
+
+```commandline
+# Run type checking manually (requires full virtual environment)
+mypy src/
+```
+
+**Note**: We rely on comprehensive test coverage (72%) and Ruff for code quality in the commit workflow. Type hints in the code still provide IDE support and documentation value.
