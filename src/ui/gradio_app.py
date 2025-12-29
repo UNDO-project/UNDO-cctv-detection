@@ -208,16 +208,7 @@ def create_demo() -> gr.Blocks:
     """
     app = CCTVDetectionApp()
 
-    # Define theme
-    theme = gr.themes.Soft(
-        primary_hue="blue",
-        secondary_hue="gray",
-    )
-
-    with gr.Blocks(
-        theme=theme,
-        title="CCTV Detection - Multi-Model Comparison",
-    ) as demo:
+    with gr.Blocks(title="CCTV Detection - Multi-Model Comparison") as demo:
         gr.Markdown(
             """
             # 🎥 CCTV Detection System
