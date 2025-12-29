@@ -1,5 +1,7 @@
 # This is the cctv detection application for the UNDO.
 
+## Setup
+
 To run this project you need to create a virtual environment. Open up a terminal and type the following:
 
 ```commandline
@@ -9,7 +11,7 @@ python3.11 -m venv venv
 Activate the newly created env:
 
 ```commandline
-source "PATH-TO-VENV/venv/bin/activate"
+source venv/bin/activate
 ```
 
 If needed you can deactivate the virtual environment from within root of project:
@@ -23,6 +25,41 @@ Install the dependencies for this project:
 ```commandline
 pip install -r requirements.txt
 ```
+
+## Configuration
+
+The project uses centralized configuration in `src/config.py` with absolute paths resolved from the project root. This allows the application to run from any directory without path issues.
+
+### Default Paths
+
+All paths are automatically resolved relative to the project root:
+- **Model weights**: `samples/best.pt`
+- **Datasets**: `datasets/`
+- **Training results**: `runs/`
+
+### Environment Variables
+
+You can override default paths using environment variables:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `CCTV_MODEL_WEIGHTS` | Custom model weights location | `/path/to/custom/model.pt` |
+| `CCTV_DATASET_DIR` | Custom dataset directory | `/path/to/custom/dataset` |
+
+### Using .env File
+
+Create a `.env` file in the project root to customize paths (optional):
+
+```bash
+# .env
+# Override model weights location
+CCTV_MODEL_WEIGHTS=/path/to/custom/model.pt
+
+# Override dataset location
+CCTV_DATASET_DIR=/path/to/custom/dataset
+```
+
+The application will automatically load these settings if the file exists.
 
 ## Image labelling
 To label images you need to have [Docker](https://www.docker.com) and [label-studio](https://labelstud.io) installed.
@@ -91,11 +128,22 @@ some images used in this project come from the dataset of the [Fuziih CCTV-Expos
 > Contact us if you want access to the dataset or the weights of the model.
 
 ## User Interface
+
 The application has a User Interface for uploading images and using the custom trained YOLOv8 to detect CCTV images.
-In order to do that `cd` into `src/presentation`, open upn a terminal and use:
+
+### Running the UI
+
+Thanks to the centralized configuration system, you can run the application from any directory:
 
 ```commandline
-python main_ui.py
+# From project root
+python app.py
+
+# OR from src/presentation directory
+cd src/presentation && python main_ui.py
+
+# OR from anywhere in the project
+python src/presentation/main_ui.py
 ```
 
 Then open up a browser and visit: `http://127.0.0.1:7860`.
