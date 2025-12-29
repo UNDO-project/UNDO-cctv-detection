@@ -44,6 +44,11 @@ pytest tests/infrastructure/test_dataset_preparer.py --no-cov
 echo "Done..."
 echo "==============================================="
 
+echo "----Running DETR dataset preparer tests"
+pytest tests/infrastructure/test_detr_dataset.py --no-cov
+echo "Done..."
+echo "==============================================="
+
 echo "----Running image converter tests"
 pytest tests/infrastructure/test_image_converter_impl.py --no-cov
 echo "Done..."
@@ -61,6 +66,11 @@ echo "==============================================="
 
 echo "----Running trainer tests"
 pytest tests/infrastructure/test_trainers.py --no-cov
+echo "Done..."
+echo "==============================================="
+
+echo "----Running DETR trainer tests"
+pytest tests/infrastructure/test_detr_trainer.py --no-cov
 echo "Done..."
 echo "==============================================="
 
