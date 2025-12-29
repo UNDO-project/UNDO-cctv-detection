@@ -47,10 +47,16 @@ class TrainingService:
             self.dataset, train_ratio, val_ratio
         )
         train_loader = DataLoader(
-            train_data, batch_size, shuffle=True, collate_fn=lambda x: tuple(zip(*x))
+            train_data,
+            batch_size,
+            shuffle=True,
+            collate_fn=lambda x: tuple(zip(*x, strict=False)),
         )
         val_loader = DataLoader(
-            val_data, batch_size, shuffle=True, collate_fn=lambda x: tuple(zip(*x))
+            val_data,
+            batch_size,
+            shuffle=True,
+            collate_fn=lambda x: tuple(zip(*x, strict=False)),
         )
 
         # Note: test_data is available but not currently used in training workflow.
@@ -58,4 +64,7 @@ class TrainingService:
 
         device = DeviceSelector.get_optimal_device()
 
-        self.model_trainer.train(train_loader, val_loader, device)
+        # Pass device first, then loaders (new unified interface)
+        # YOLO trainers will ignore loaders and use their data_config
+        # PyTorch trainers (Faster R-CNN) will use the loaders
+        self.model_trainer.train(device, train_loader, val_loader)
