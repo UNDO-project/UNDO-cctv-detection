@@ -78,6 +78,7 @@ all = [
 cctv-ui = "app:main"
 cctv-train = "scripts.train_yolo:main"
 cctv-train-detr = "scripts.train_detr:main"
+cctv-train-faster-rcnn = "scripts.train_faster_rcnn:main"
 cctv-prepare-examples = "scripts.prepare_examples:main"
 cctv-benchmark = "scripts.benchmark_models:main"
 
