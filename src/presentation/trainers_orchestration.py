@@ -1,11 +1,11 @@
 from pathlib import Path
 
-import torch.optim
 from loguru import logger
 
 from src.config import PROJECT_ROOT
 from src.infrastructure.dataset_preparer_impl import SklearnDatasetPreparer
 from src.infrastructure.trainers import YoloUltralyticsTrainer
+from src.infrastructure.device_selector import DeviceSelector
 
 
 def main() -> None:
@@ -39,12 +39,7 @@ def main() -> None:
     model_trainer = YoloUltralyticsTrainer(model_weights, data_config, epochs, img_size)
 
     # For Apple M2, choose a device (this is optional since Ultralytics does its own device handling).
-    if torch.backends.mps.is_available():
-        device = torch.device("mps")
-    elif torch.cuda.is_available():
-        device = torch.device("cuda:0")
-    else:
-        device = torch.device("cpu")
+    device = DeviceSelector.get_optimal_device()
 
     logger.info(f"Starting training on device: {device}")
     # The train() method’s DataLoader parameters are not used by the Ultralytics trainer.

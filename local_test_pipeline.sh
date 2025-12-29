@@ -54,6 +54,11 @@ pytest tests/infrastructure/test_splitters.py --no-cov
 echo "Done..."
 echo "==============================================="
 
+echo "----Running device selector tests"
+pytest tests/infrastructure/test_device_selector.py --no-cov
+echo "Done..."
+echo "==============================================="
+
 echo "Running presentation layer tests"
 echo "----Running main ui tests"
 pytest tests/presentation/test_main_ui.py --no-cov
