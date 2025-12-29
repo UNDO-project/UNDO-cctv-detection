@@ -1,7 +1,8 @@
 """Unit tests for TrainingService application service."""
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 import torch
 from torch.utils.data import Dataset
 
@@ -104,14 +105,14 @@ class TestTrainingService:
         mock_trainer.train.assert_called_once()
         call_args = mock_trainer.train.call_args[0]
 
-        # Verify that DataLoaders were created and passed
-        train_loader = call_args[0]
-        val_loader = call_args[1]
-        device = call_args[2]
+        # Verify that device is first, then DataLoaders (new interface)
+        device = call_args[0]
+        train_loader = call_args[1]
+        val_loader = call_args[2]
 
+        assert isinstance(device, torch.device)
         assert hasattr(train_loader, "__iter__")  # DataLoader is iterable
         assert hasattr(val_loader, "__iter__")
-        assert isinstance(device, torch.device)
 
     @patch("torch.backends.mps.is_available", return_value=True)
     @patch("torch.cuda.is_available", return_value=False)
@@ -130,7 +131,7 @@ class TestTrainingService:
 
         # Assert
         call_args = mock_trainer.train.call_args[0]
-        device = call_args[2]
+        device = call_args[0]  # Device is now first parameter
         assert device.type == "mps"
 
     @patch("torch.backends.mps.is_available", return_value=False)
@@ -157,7 +158,7 @@ class TestTrainingService:
 
         # Assert
         call_args = mock_trainer.train.call_args[0]
-        device = call_args[2]
+        device = call_args[0]  # Device is now first parameter
         assert device.type == "cuda"
 
     @patch("torch.backends.mps.is_available", return_value=False)
@@ -177,7 +178,7 @@ class TestTrainingService:
 
         # Assert
         call_args = mock_trainer.train.call_args[0]
-        device = call_args[2]
+        device = call_args[0]  # Device is now first parameter
         assert device.type == "cpu"
 
     def test_run_training_with_custom_batch_size(
@@ -196,8 +197,9 @@ class TestTrainingService:
 
         # Assert
         call_args = mock_trainer.train.call_args[0]
-        train_loader = call_args[0]
-        val_loader = call_args[1]
+        # New interface: device is first, then loaders
+        train_loader = call_args[1]
+        val_loader = call_args[2]
 
         # DataLoaders should use the custom batch size
         assert train_loader.batch_size == custom_batch_size
@@ -218,7 +220,8 @@ class TestTrainingService:
 
         # Assert
         call_args = mock_trainer.train.call_args[0]
-        train_loader = call_args[0]
+        # New interface: device is first, then loaders
+        train_loader = call_args[1]
 
         # Training loader should have shuffle enabled
         # Note: We can't directly check shuffle, but we verify the loader was created
@@ -287,7 +290,7 @@ class TestTrainingService:
 
         # Assert
         call_args = mock_trainer.train.call_args[0]
-        assert len(call_args) == 3  # train_loader, val_loader, device
-        device = call_args[2]
+        assert len(call_args) == 3  # device, train_loader, val_loader (new interface)
+        device = call_args[0]  # Device is now first parameter
         assert isinstance(device, torch.device)
         assert device.type in ["cpu", "cuda", "mps"]

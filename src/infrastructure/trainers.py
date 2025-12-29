@@ -1,12 +1,15 @@
 from pathlib import Path
-from typing import Any
 
 import torch
-from torch import optim
-from torchvision.models.detection import fasterrcnn_resnet50_fpn
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor, FasterRCNN
-from ultralytics import YOLO
 from loguru import logger
+from torch import optim
+from torch.utils.data import DataLoader
+from torchvision.models.detection import (
+    FasterRCNN_ResNet50_FPN_Weights,
+    fasterrcnn_resnet50_fpn,
+)
+from torchvision.models.detection.faster_rcnn import FasterRCNN, FastRCNNPredictor
+from ultralytics import YOLO
 
 from src.config import settings
 from src.domain.services.model_trainer import ModelTrainer
@@ -29,21 +32,41 @@ class YoloUltralyticsTrainer(ModelTrainer):
         # Initialize YOLO model from ultralytics
         self.model = YOLO(model_weights)
 
-    def train(self, train_loader: Any, val_loader: Any, device: Any) -> None:
+    def train(
+        self,
+        device: torch.device,
+        train_loader: DataLoader | None = None,
+        val_loader: DataLoader | None = None,
+        data_config: Path | None = None,
+    ) -> None:
         """Train the YOLO model using Ultralytics library.
 
-        :param train_loader: Not used by Ultralytics (uses data config instead)
-        :param val_loader: Not used by Ultralytics (uses data config instead)
+        YOLO training uses the data_config YAML file, not DataLoaders.
+
         :param device: Target device for training
+        :param train_loader: Not used by YOLO (uses data_config instead)
+        :param val_loader: Not used by YOLO (uses data_config instead)
+        :param data_config: Path to YAML config file (required for YOLO)
+        :return: None
+        :rtype: None
+        :raises ValueError: If data_config is not provided
         """
-        # Note: Ultralytics handles device selection internally (and often chooses the best available one).
+        # Validate that data_config is provided
+        config_to_use = data_config or self.data_config
+        self.validate_inputs(train_loader, val_loader, config_to_use)
+
+        if config_to_use is None:
+            msg = "YOLO trainer requires data_config to be provided"
+            raise ValueError(msg)
+
+        # Note: Ultralytics handles device selection internally
         logger.info(f"Training with Ultralytics YOLO on device: {device}")
         self.model.train(
-            data=self.data_config,
+            data=config_to_use,
             epochs=self.epochs,
             imgsz=self.img_size,
-            batch=settings.training.batch_size,  # Batch size from settings
-            lr0=settings.training.learning_rate,  # Learning rate from settings
+            batch=settings.training.batch_size,
+            lr0=settings.training.learning_rate,
             weight_decay=0.001,  # Regularization to mitigate overfitting
             mosaic=0.8,  # Mosaic augmentation
             mixup=0.1,  # Mixup augmentation
@@ -72,26 +95,45 @@ class FasterRCNNTrainer(ModelTrainer):
         self.model = self.build_model()
 
     def build_model(self) -> FasterRCNN:
-        """
-        Build and return the Faster R-CNN model with a custom head.
+        """Build and return the Faster R-CNN model with a custom head.
+
         :return: Faster R-CNN model
+        :rtype: FasterRCNN
         """
-        # Load a pre-trained Faster R-CNN model
-        model = fasterrcnn_resnet50_fpn(pretrained=True)
+        # Load a pre-trained Faster R-CNN model with COCO weights
+        model = fasterrcnn_resnet50_fpn(weights=FasterRCNN_ResNet50_FPN_Weights.DEFAULT)
         # Get the number of input features for the classifier
         in_features = model.roi_heads.box_predictor.cls_score.in_features
         # Replace the pre-trained head with a new one tailored for our dataset
         model.roi_heads.box_predictor = FastRCNNPredictor(in_features, self.num_classes)
         return model
 
-    def train(self, train_loader: Any, val_loader: Any, device: Any) -> None:
+    def train(
+        self,
+        device: torch.device,
+        train_loader: DataLoader | None = None,
+        val_loader: DataLoader | None = None,
+        data_config: Path | None = None,
+    ) -> None:
+        """Train the Faster R-CNN model using the provided dataloaders.
+
+        Faster R-CNN training uses DataLoaders, not config files.
+
+        :param device: Device to train on (cpu, cuda, or mps)
+        :param train_loader: Training dataloader (required for Faster R-CNN)
+        :param val_loader: Validation dataloader (required for Faster R-CNN)
+        :param data_config: Not used by Faster R-CNN
+        :return: None
+        :rtype: None
+        :raises ValueError: If train_loader or val_loader not provided
         """
-        Train the Faster R-CNN model using the provided dataloaders on the specified device.
-        :param train_loader: Training dataloader
-        :param val_loader: Validation dataloader
-        :param device: Device to train on ('cpu', 'cuda', or 'mps')
-        :return:
-        """
+        # Validate that loaders are provided
+        self.validate_inputs(train_loader, val_loader, data_config)
+
+        if train_loader is None or val_loader is None:
+            msg = "Faster R-CNN trainer requires train_loader and val_loader"
+            raise ValueError(msg)
+
         self.model.to(device)
         # Optimizer for parameters that require gradients
         params = [p for p in self.model.parameters() if p.requires_grad]
@@ -120,7 +162,7 @@ class FasterRCNNTrainer(ModelTrainer):
             # Optionally, evaluate on the validation set after each epoch
             self.evaluate(val_loader, device)
 
-    def evaluate(self, val_loader: Any, device: Any) -> None:
+    def evaluate(self, val_loader: DataLoader, device: torch.device) -> None:
         """
         Evaluate the model on the validation set and log the loss.
         :param val_loader: Validation dataloader
