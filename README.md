@@ -1,4 +1,7 @@
-# This is the cctv detection application for the UNDO.
+# CCTV detectors
+
+> This application is part of the Understanding Nordic Digital Order (UNDO) project.
+> For more details visit the project's webpage [here](https://undo-project.info).
 
 ## Setup
 
