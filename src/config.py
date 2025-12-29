@@ -118,6 +118,10 @@ class ModelWeightsConfig(BaseModel):
         default=Path("samples/detr_best.pt"),
         description="Path to DETR model weights",
     )
+    detr_model_name: str = Field(
+        default="facebook/detr-resnet-50",
+        description="Hugging Face DETR model identifier",
+    )
 
     @model_validator(mode="after")
     def resolve_paths(self) -> "ModelWeightsConfig":
