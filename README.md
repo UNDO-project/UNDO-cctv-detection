@@ -156,6 +156,16 @@ uv run python scripts/train_yolo.py
 
 Training configuration is managed via `src/config.py` and can be overridden with environment variables.
 
+### Training Faster R-CNN
+
+```bash
+# Train Faster R-CNN model
+uv run cctv-train-faster-rcnn
+
+# OR run directly
+uv run python scripts/train_faster_rcnn.py
+```
+
 ### Training DETR
 
 ```bash
@@ -311,6 +321,7 @@ The following console scripts are available after installation:
 |---------|-------------|
 | `uv run cctv-ui` | Launch Gradio web interface |
 | `uv run cctv-train` | Train YOLOv8 model |
+| `uv run cctv-train-faster-rcnn` | Train Faster R-CNN model |
 | `uv run cctv-train-detr` | Train DETR model |
 | `uv run cctv-prepare-examples` | Prepare example images for UI |
 | `uv run cctv-benchmark` | Benchmark inference speed across all models |
