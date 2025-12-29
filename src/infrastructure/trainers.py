@@ -8,7 +8,7 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor, FasterRC
 from ultralytics import YOLO
 from loguru import logger
 
-from src.config import BATCH_SIZE
+from src.config import settings
 from src.domain.services.model_trainer import ModelTrainer
 
 
@@ -30,23 +30,29 @@ class YoloUltralyticsTrainer(ModelTrainer):
         self.model = YOLO(model_weights)
 
     def train(self, train_loader: Any, val_loader: Any, device: Any) -> None:
+        """Train the YOLO model using Ultralytics library.
+
+        :param train_loader: Not used by Ultralytics (uses data config instead)
+        :param val_loader: Not used by Ultralytics (uses data config instead)
+        :param device: Target device for training
+        """
         # Note: Ultralytics handles device selection internally (and often chooses the best available one).
         logger.info(f"Training with Ultralytics YOLO on device: {device}")
         self.model.train(
             data=self.data_config,
             epochs=self.epochs,
             imgsz=self.img_size,
-            batch=BATCH_SIZE,  # Lower batch size for a small dataset
-            lr0=0.005,  # Reduced initial learning rate
-            weight_decay=0.001,  # Increased regularization to mitigate overfitting
-            mosaic=0.8,  # Slightly reduced mosaic augmentation
-            mixup=0.1,  # Apply a small mixup augmentation factor
+            batch=settings.training.batch_size,  # Batch size from settings
+            lr0=settings.training.learning_rate,  # Learning rate from settings
+            weight_decay=0.001,  # Regularization to mitigate overfitting
+            mosaic=0.8,  # Mosaic augmentation
+            mixup=0.1,  # Mixup augmentation
             freeze=[
                 0,
                 1,
                 2,
                 3,
-            ],  # Freeze the early layers to leverage pretrained features
+            ],  # Freeze early layers to leverage pretrained features
         )
 
 
