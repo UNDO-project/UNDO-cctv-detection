@@ -1,0 +1,118 @@
+"""Train Faster R-CNN model on CCTV dataset.
+
+This script orchestrates the training of a Faster R-CNN model
+on the CCTV detection dataset using PyTorch and torchvision.
+"""
+
+import torch
+import torchvision.transforms as t
+from loguru import logger
+from torch.utils.data import DataLoader
+
+from src.config import settings
+from src.infrastructure.device_selector import DeviceSelector
+from src.infrastructure.faster_rcnn_dataset import FasterRCNNDataset
+from src.infrastructure.trainers import FasterRCNNTrainer
+
+
+def collate_fn(batch):
+    """Custom collate function for Faster R-CNN batching.
+
+    :param batch: List of (image, target) tuples
+    :return: Tuple of (images, targets)
+    :rtype: tuple
+    """
+    return tuple(zip(*batch, strict=False))
+
+
+def main() -> None:
+    """Train Faster R-CNN model on CCTV dataset.
+
+    This function:
+    1. Creates Faster R-CNN datasets from YOLO-format annotations
+    2. Creates DataLoaders with custom collate function
+    3. Initializes Faster R-CNN trainer with configured hyperparameters
+    4. Trains the model on the optimal available device
+    5. Saves trained weights
+
+    :return: None
+    :rtype: None
+    """
+    logger.info("Starting Faster R-CNN training pipeline...")
+
+    # Define transforms (only ToTensor, FasterRCNN handles normalization)
+    transforms = t.Compose(
+        [
+            t.ToTensor(),
+        ]
+    )
+
+    # Create datasets from YOLO format
+    logger.info("Creating Faster R-CNN datasets...")
+    train_dataset = FasterRCNNDataset(
+        images_dir=settings.paths.ultralytics_dir / "images" / "train",
+        labels_dir=settings.paths.ultralytics_dir / "labels" / "train",
+        transforms=transforms,
+    )
+
+    val_dataset = FasterRCNNDataset(
+        images_dir=settings.paths.ultralytics_dir / "images" / "val",
+        labels_dir=settings.paths.ultralytics_dir / "labels" / "val",
+        transforms=transforms,
+    )
+
+    logger.info(
+        f"Prepared {len(train_dataset)} training and "
+        f"{len(val_dataset)} validation samples"
+    )
+
+    # Create dataloaders with custom collate function
+    logger.info("Creating dataloaders...")
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=settings.training.batch_size,
+        shuffle=True,
+        collate_fn=collate_fn,
+        num_workers=0,  # Set to 0 for compatibility
+    )
+
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=settings.training.batch_size,
+        shuffle=False,
+        collate_fn=collate_fn,
+        num_workers=0,
+    )
+
+    # Initialize trainer
+    # num_classes = 3 (background class 0 + CCTV class 1 + CCTV-SIGNS class 2)
+    logger.info("Initializing Faster R-CNN trainer...")
+    trainer = FasterRCNNTrainer(
+        num_classes=3,  # background + 2 CCTV classes
+        epochs=settings.training.epochs,
+        learning_rate=settings.training.learning_rate,
+    )
+
+    # Select optimal device for training
+    device = DeviceSelector.get_optimal_device()
+    logger.info(f"Training on device: {device}")
+
+    # Train the model
+    logger.info("Starting model training...")
+    trainer.train(
+        device=device,
+        train_loader=train_loader,
+        val_loader=val_loader,
+    )
+
+    # Save model weights
+    logger.info("Saving model weights...")
+    settings.models.faster_rcnn_weights.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(trainer.model.state_dict(), settings.models.faster_rcnn_weights)
+    logger.success(
+        f"Faster R-CNN training complete! Weights saved to {settings.models.faster_rcnn_weights}"
+    )
+
+
+if __name__ == "__main__":
+    main()
