@@ -74,6 +74,11 @@ pytest tests/infrastructure/test_detr_trainer.py --no-cov
 echo "Done..."
 echo "==============================================="
 
+echo "----Running detectors tests"
+pytest tests/infrastructure/test_detectors.py --no-cov
+echo "Done..."
+echo "==============================================="
+
 echo "Running UI layer tests"
 echo "----Running gradio app tests"
 pytest tests/ui/test_gradio_app.py --no-cov
