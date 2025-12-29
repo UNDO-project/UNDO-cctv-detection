@@ -2,28 +2,57 @@
 
 ## Setup
 
-To run this project you need to create a virtual environment. Open up a terminal and type the following:
+This project uses [uv](https://github.com/astral-sh/uv) for fast, reliable package management (10-100x faster than pip).
 
-```commandline
-python3.11 -m venv venv
+### Install uv
+
+If you don't have uv installed:
+
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or with pip
+pip install uv
 ```
 
-Activate the newly created env:
+### Install Dependencies
 
-```commandline
-source venv/bin/activate
+```bash
+# Sync all dependencies from pyproject.toml
+uv sync
+
+# Or install with all optional dependencies (dev, docs, mypy)
+uv sync --all-extras
 ```
 
-If needed you can deactivate the virtual environment from within root of project:
+### Running Commands
 
-```commandline
-deactivate
+With uv, you don't need to manually activate a virtual environment:
+
+```bash
+# Run the UI
+uv run python app.py
+
+# Run tests
+uv run pytest tests/
+
+# Use console scripts
+uv run cctv-ui
+uv run cctv-train
 ```
 
-Install the dependencies for this project:
+### Traditional Virtual Environment (Optional)
 
-```commandline
-pip install -r requirements.txt
+If you prefer traditional activation:
+
+```bash
+# uv creates .venv automatically
+source .venv/bin/activate
+
+# Then run commands normally
+python app.py
+pytest tests/
 ```
 
 ## Configuration
