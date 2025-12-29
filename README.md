@@ -12,6 +12,9 @@ A multi-model object detection system for identifying CCTV cameras and signage u
   - Faster R-CNN: Accurate two-stage CNN detector
   - DETR: Modern transformer-based detector
 - **Interactive Web UI**: Gradio-based interface with model comparison
+- **Performance Dashboard**: Training metrics visualization with interactive charts
+  - Loss curves, mAP comparisons, and training summaries
+  - Inference speed benchmarking across all models
 - **Performance Metrics**: Real-time inference time and detection statistics
 - **Example Gallery**: Pre-loaded sample images for quick testing
 
@@ -107,7 +110,7 @@ Then open your browser and visit: `http://127.0.0.1:7860`
 
 ### UI Features
 
-The web interface includes four tabs:
+The web interface includes five tabs:
 
 1. **Single Model Detection**: Upload an image and select a model (YOLOv8, Faster R-CNN, or DETR) to run detection with adjustable confidence threshold
 
@@ -115,7 +118,13 @@ The web interface includes four tabs:
 
 3. **Example Images**: Pre-loaded CCTV images for quick testing (click to load into Single Model tab)
 
-4. **About**: Model details, architecture information, and citation instructions
+4. **📊 Performance Dashboard**: View training metrics, loss curves, mAP comparisons, and model performance analytics
+   - Training summary table showing epochs, mAP scores, and final losses
+   - Interactive mAP comparison charts (mAP@0.5 and mAP@0.5:0.95)
+   - Training history with loss curves for each model
+   - Benchmark inference speed across all models
+
+5. **About**: Model details, architecture information, and citation instructions
 
 ### Preparing Example Images
 
@@ -304,6 +313,7 @@ The following console scripts are available after installation:
 | `uv run cctv-train` | Train YOLOv8 model |
 | `uv run cctv-train-detr` | Train DETR model |
 | `uv run cctv-prepare-examples` | Prepare example images for UI |
+| `uv run cctv-benchmark` | Benchmark inference speed across all models |
 
 ## Project Structure
 
