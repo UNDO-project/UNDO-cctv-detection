@@ -1,7 +1,7 @@
-from ultralytics import YOLO
-from PIL import Image
-import numpy as np
 import gradio as gr
+import numpy as np
+from PIL import Image
+from ultralytics import YOLO
 
 from src.config import settings
 
@@ -29,5 +29,11 @@ demo = gr.Interface(
     description="Upload an image for CCTV detection.",
 )
 
-if __name__ == "__main__":
+
+def launch_ui() -> None:
+    """Launch the Gradio web interface for CCTV detection."""
     demo.launch()
+
+
+if __name__ == "__main__":
+    launch_ui()
