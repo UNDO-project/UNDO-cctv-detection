@@ -75,6 +75,7 @@ all = [
 [project.scripts]
 cctv-ui = "app:main"
 cctv-train = "scripts.train_yolo:main"
+cctv-train-detr = "scripts.train_detr:main"
 
 [project.urls]
 Homepage = "https://github.com/jethronap/cctv_detection"
