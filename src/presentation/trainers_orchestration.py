@@ -2,7 +2,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from src.config import PROJECT_ROOT
+from src.config import PROJECT_ROOT, DATA_CONFIG
 from src.infrastructure.dataset_preparer_impl import SklearnDatasetPreparer
 from src.infrastructure.trainers import YoloUltralyticsTrainer
 from src.infrastructure.device_selector import DeviceSelector
@@ -29,7 +29,7 @@ def main() -> None:
     logger.info("Dataset is prepared and ready for training.")
 
     # Get data.yaml from project root
-    data_config = Path(PROJECT_ROOT / "data.yaml")
+    data_config = DATA_CONFIG
 
     model_weights = "yolov8n.pt"
 
