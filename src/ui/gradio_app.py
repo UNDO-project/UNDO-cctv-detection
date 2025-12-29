@@ -6,15 +6,22 @@ from pathlib import Path
 import gradio as gr
 from PIL import Image
 
+from src.application.metrics_aggregator import MetricsAggregator
 from src.config import settings
+from src.domain.services.object_detector import ObjectDetector
 from src.infrastructure.detector_factory import DetectorFactory, ModelType
 from src.infrastructure.device_selector import DeviceSelector
+from src.ui.visualizations import (
+    create_loss_curve,
+    create_map_comparison,
+    create_metrics_summary_table,
+)
 
 
 class CCTVDetectionApp:
     """Gradio app for CCTV detection with multiple models."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize app with all models."""
         self.device = DeviceSelector.get_optimal_device()
         self.class_names = ["CCTV", "CCTV-SIGNS"]
@@ -38,12 +45,15 @@ class CCTVDetectionApp:
         if not self.detectors:
             raise RuntimeError("No models could be loaded! Ensure model weights exist.")
 
-    def _load_detector(self, model_type: ModelType, model_path: Path):
+    def _load_detector(
+        self, model_type: ModelType, model_path: Path
+    ) -> ObjectDetector | None:
         """Load detector with error handling.
 
         :param model_type: Type of model to load
         :param model_path: Path to model weights
         :return: Detector instance or None if loading failed
+        :rtype: ObjectDetector | None
         """
         try:
             return DetectorFactory.create_detector(
@@ -353,6 +363,59 @@ def create_demo() -> gr.Blocks:
                     gr.Markdown(
                         "⚠️ No example images found. "
                         "Add images to `examples/` directory or run `uv run python scripts/prepare_examples.py`."
+                    )
+
+            # ==================== Performance Dashboard Tab ====================
+            with gr.Tab("📊 Performance Dashboard"):
+                gr.Markdown("### Model Training Metrics")
+
+                # Load metrics
+                runs_dir = settings.paths.project_root / "runs"
+                aggregator = MetricsAggregator(runs_dir)
+                all_metrics = aggregator.get_all_metrics()
+
+                if all_metrics:
+                    # Metrics summary table
+                    gr.Markdown("#### Training Summary")
+                    summary_table = create_metrics_summary_table(all_metrics)
+                    gr.Plot(summary_table)
+
+                    # mAP comparison chart
+                    gr.Markdown("#### Model Performance Comparison")
+                    map_plot = create_map_comparison(all_metrics)
+                    gr.Plot(map_plot)
+
+                    # Individual loss curves
+                    gr.Markdown("#### Training History")
+                    for metrics in all_metrics:
+                        loss_plot = create_loss_curve(metrics)
+                        gr.Plot(loss_plot)
+
+                    # Benchmark instructions
+                    gr.Markdown(
+                        """
+                        ---
+                        #### Inference Speed Benchmark
+
+                        To benchmark inference speed across all models, run:
+                        ```bash
+                        uv run cctv-benchmark
+                        ```
+
+                        This will measure mean inference time, standard deviation, and speedup comparisons.
+                        """
+                    )
+                else:
+                    gr.Markdown(
+                        """
+                        ⚠️ **No training metrics found.**
+
+                        Train models first to see performance analytics:
+                        - **YOLO**: `uv run cctv-train`
+                        - **DETR**: `uv run cctv-train-detr`
+
+                        Training metrics will appear here automatically after training completes.
+                        """
                     )
 
             # ==================== About Tab ====================
