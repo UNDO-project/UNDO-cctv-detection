@@ -1,0 +1,191 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cctv-detection"
+version = "0.2.0"
+description = "CCTV camera and signage detection application using custom-trained YOLOv8 model"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Creative Commons"}
+authors = [
+    {name = "UNDO Project Team"},
+]
+keywords = ["computer-vision", "yolo", "object-detection", "cctv", "surveillance", "pytorch"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+]
+
+# Core dependencies
+dependencies = [
+    "pillow>=11.1.0",
+    "pillow-heif>=0.21.0",
+    "loguru>=0.7.3",
+    "playwright>=1.47.0",
+    "pandas>=2.2.3",
+    "torch>=2.9.1",
+    "torchvision>=0.24.1",
+    "scikit-learn>=1.6.1",
+    "ultralytics>=8.3.74",
+    "pyyaml>=6.0.2",
+    "gradio>=5.50.0",
+    "python-dotenv>=1.2.1",
+    "pydantic>=2.12.3",
+    "pydantic-settings>=2.12.0",
+]
+
+[project.optional-dependencies]
+# Development dependencies
+dev = [
+    "ruff>=0.14.10",
+    "pre-commit>=3.8.0",
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-asyncio>=0.24.0",
+]
+
+# Documentation dependencies
+docs = [
+    "sphinx>=8.2.3",
+    "sphinx-rtd-theme>=3.0.2",
+]
+
+# Type checking dependencies (optional for local development)
+mypy = [
+    "mypy>=1.19.1",
+    "types-pillow>=10.2.0.20240822",
+    "types-pyyaml>=6.0.12.20250915",
+]
+
+# All optional dependencies combined
+all = [
+    "cctv-detection[dev,docs,mypy]",
+]
+
+[project.scripts]
+cctv-ui = "src.presentation.main_ui:launch_ui"
+cctv-train = "src.presentation.trainers_orchestration:main"
+
+[project.urls]
+Homepage = "https://github.com/jethronap/cctv_detection"
+Repository = "https://github.com/jethronap/cctv_detection"
+Issues = "https://github.com/jethronap/cctv_detection/issues"
+
+# ============================================================
+# Tool Configurations
+# ============================================================
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+exclude = ["src.tools*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.yml", "*.json"]
+
+[tool.ruff]
+# Python version target
+target-version = "py311"
+
+# Line length
+line-length = 88
+
+# Enable rules
+lint.select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+]
+
+# Ignore specific rules
+lint.ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+
+# Exclude patterns
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "*.pyc",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "build",
+    "dist",
+    "*.egg-info",
+    "runs/",
+    "datasets/",
+    "samples/",
+    "htmlcov/",
+    "src/tools/",  # Archived tools directory
+]
+
+# ============================================================
+# Pytest Configuration
+# ============================================================
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_default_fixture_loop_scope = "function"
+addopts = [
+    "--verbose",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=60",
+    "--strict-markers",
+    "--tb=short",
+]
+markers = [
+    "unit: Unit tests for individual components",
+    "integration: Integration tests for multiple components",
+    "slow: Tests that take significant time to run",
+]
+
+# ============================================================
+# Coverage Configuration
+# ============================================================
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "src/tools/*",  # Archived tools
+]
+
+[tool.coverage.report]
+precision = 2
+skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
