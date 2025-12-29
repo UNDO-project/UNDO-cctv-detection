@@ -1,13 +1,17 @@
+"""Train YOLOv8 model on CCTV dataset."""
+
 from loguru import logger
 
 from src.config import settings
 from src.infrastructure.dataset_preparer_impl import SklearnDatasetPreparer
-from src.infrastructure.trainers import YoloUltralyticsTrainer
 from src.infrastructure.device_selector import DeviceSelector
+from src.infrastructure.trainers import YoloUltralyticsTrainer
 
 
 def main() -> None:
     """Train YOLOv8 model on CCTV dataset."""
+    logger.info("Preparing dataset for YOLO training...")
+
     # Prepare dataset using paths from settings
     dataset_preparer = SklearnDatasetPreparer()
     dataset_preparer.prepare_ultralytics_dataset(
@@ -22,6 +26,7 @@ def main() -> None:
     logger.info("Dataset is prepared and ready for training.")
 
     # Initialize trainer with settings
+    logger.info("Starting YOLO training...")
     model_trainer = YoloUltralyticsTrainer(
         model_weights="yolov8n.pt",
         data_config=settings.paths.data_config,
@@ -31,10 +36,11 @@ def main() -> None:
 
     # Select optimal device
     device = DeviceSelector.get_optimal_device()
+    logger.info(f"Training on device: {device}")
 
-    logger.info(f"Starting training on device: {device}")
-    # The train() method's DataLoader parameters are not used by the Ultralytics trainer.
+    # Train model
     model_trainer.train(None, None, device)
+    logger.success("Training complete!")
 
 
 if __name__ == "__main__":
