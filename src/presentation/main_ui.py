@@ -3,9 +3,9 @@ from PIL import Image
 import numpy as np
 import gradio as gr
 
-from src.config import YOLO_WEIGHTS
+from src.config import settings
 
-model = YOLO(str(YOLO_WEIGHTS))
+model = YOLO(str(settings.models.yolo_weights))
 
 
 def detect_objects(image: Image.Image) -> Image.Image:
