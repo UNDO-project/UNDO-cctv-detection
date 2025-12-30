@@ -10,7 +10,6 @@ from loguru import logger
 from torch.utils.data import DataLoader
 
 from src.config import settings
-from src.infrastructure.device_selector import DeviceSelector
 from src.infrastructure.faster_rcnn_dataset import FasterRCNNDataset
 from src.infrastructure.trainers import FasterRCNNTrainer
 
@@ -93,9 +92,20 @@ def main() -> None:
         learning_rate=settings.training.learning_rate,
     )
 
-    # Select optimal device for training
-    device = DeviceSelector.get_optimal_device()
-    logger.info(f"Training on device: {device}")
+    # Select device for training
+    # Faster R-CNN has compatibility issues with MPS, so prefer CUDA or CPU
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        logger.info("Training on CUDA GPU")
+    else:
+        # Skip MPS due to compatibility issues with Faster R-CNN operations
+        device = torch.device("cpu")
+        if torch.backends.mps.is_available():
+            logger.warning(
+                "MPS available but using CPU for Faster R-CNN due to compatibility issues"
+            )
+        else:
+            logger.info("Training on CPU")
 
     # Train the model
     logger.info("Starting model training...")

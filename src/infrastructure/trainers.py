@@ -165,11 +165,15 @@ class FasterRCNNTrainer(ModelTrainer):
     def evaluate(self, val_loader: DataLoader, device: torch.device) -> None:
         """
         Evaluate the model on the validation set and log the loss.
+
+        Note: Model must stay in training mode to return loss dictionaries.
+        We use torch.no_grad() to prevent gradient computation.
+
         :param val_loader: Validation dataloader
         :param device: Device for evaluation
         :return:
         """
-        self.model.eval()
+        self.model.train()  # Keep in train mode to get losses
         total_loss = 0.0
         with torch.no_grad():
             for images, targets in val_loader:
