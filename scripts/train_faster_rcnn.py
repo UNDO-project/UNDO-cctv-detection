@@ -22,7 +22,7 @@ def collate_fn(batch):
     :return: Tuple of (images, targets)
     :rtype: tuple
     """
-    return tuple(zip(*batch, strict=False))
+    return tuple(zip(*batch, strict=True))
 
 
 def main() -> None:
