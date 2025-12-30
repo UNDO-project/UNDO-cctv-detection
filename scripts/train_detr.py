@@ -75,14 +75,14 @@ def main():
         train_dataset,
         batch_size=settings.training.batch_size,
         shuffle=True,
-        collate_fn=lambda batch: tuple(zip(*batch, strict=False)),
+        collate_fn=lambda batch: tuple(zip(*batch, strict=True)),
     )
 
     val_loader = DataLoader(
         val_dataset,
         batch_size=settings.training.batch_size,
         shuffle=False,
-        collate_fn=lambda batch: tuple(zip(*batch, strict=False)),
+        collate_fn=lambda batch: tuple(zip(*batch, strict=True)),
     )
 
     # Select optimal device for training
@@ -97,11 +97,8 @@ def main():
         val_loader=val_loader,
     )
 
-    # Save final weights
-    logger.info("Saving model weights...")
-    trainer.save_weights(settings.models.detr_weights)
     logger.success(
-        f"DETR training complete! Weights saved to {settings.models.detr_weights}"
+        f"DETR training complete! Model saved to {trainer.output_dir / 'final'}"
     )
 
 
