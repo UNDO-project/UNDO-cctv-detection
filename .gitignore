@@ -256,5 +256,10 @@ fabric.properties
 /runs
 data.yaml
 
+# Model weights (large files, distributed separately)
+*.pt
+*.pth
+*.onnx
+
 # MacOs stuff
 .DS_Store
