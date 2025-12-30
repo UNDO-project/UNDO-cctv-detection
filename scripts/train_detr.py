@@ -97,8 +97,23 @@ def main():
         val_loader=val_loader,
     )
 
+    # Automatically evaluate mAP after training
+    logger.info("Evaluating model performance...")
+    eval_metrics = trainer.evaluate_map(val_loader, device)
+
+    # Save evaluation metrics
+    import json
+
+    eval_file = trainer.output_dir / "final" / "evaluation_metrics.json"
+    with open(eval_file, "w") as f:
+        json.dump(eval_metrics, f, indent=2)
+
     logger.success(
         f"DETR training complete! Model saved to {trainer.output_dir / 'final'}"
+    )
+    logger.info(
+        f"Evaluation: mAP@0.5={eval_metrics['map50']:.3f}, "
+        f"mAP@0.5:0.95={eval_metrics['map']:.3f}"
     )
 
 
