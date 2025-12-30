@@ -75,7 +75,7 @@ all = [
 ]
 
 [project.scripts]
-cctv-ui = "app:main"
+cctv-ui = "scripts.launch_ui:main"
 cctv-train = "scripts.train_yolo:main"
 cctv-train-detr = "scripts.train_detr:main"
 cctv-train-faster-rcnn = "scripts.train_faster_rcnn:main"
