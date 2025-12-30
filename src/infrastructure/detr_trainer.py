@@ -65,6 +65,48 @@ class DETRTrainer(ModelTrainer):
 
         logger.info(f"Initialized DETR trainer with {model_name}")
 
+    @staticmethod
+    def collate_fn(batch):
+        """Custom collate function for DETR training.
+
+        Handles variable-sized images by padding to the largest dimensions
+        in the batch, and keeps labels as a list (variable number of boxes).
+
+        :param batch: List of dicts with 'pixel_values' and 'labels'
+        :return: Batched dict with padded pixel_values, pixel_mask, and labels
+        :rtype: dict
+        """
+        # Get pixel values and find max dimensions
+        pixel_values_list = [item["pixel_values"] for item in batch]
+        labels = [item["labels"] for item in batch]
+
+        # Find max height and width in batch
+        max_height = max([pv.shape[1] for pv in pixel_values_list])
+        max_width = max([pv.shape[2] for pv in pixel_values_list])
+
+        # Pad all images to max dimensions
+        padded_pixel_values = []
+        pixel_mask = []
+
+        for pv in pixel_values_list:
+            c, h, w = pv.shape
+            # Create padded tensor (pad with zeros)
+            padded = torch.zeros((c, max_height, max_width), dtype=pv.dtype)
+            padded[:, :h, :w] = pv
+
+            # Create mask (1 for real pixels, 0 for padding)
+            mask = torch.zeros((max_height, max_width), dtype=torch.long)
+            mask[:h, :w] = 1
+
+            padded_pixel_values.append(padded)
+            pixel_mask.append(mask)
+
+        return {
+            "pixel_values": torch.stack(padded_pixel_values),
+            "pixel_mask": torch.stack(pixel_mask),
+            "labels": labels,
+        }
+
     def train(
         self,
         device: torch.device,
@@ -107,13 +149,14 @@ class DETRTrainer(ModelTrainer):
             push_to_hub=False,
         )
 
-        # Create Hugging Face Trainer
+        # Create Hugging Face Trainer with custom collate function
         trainer = Trainer(
             model=self.model,
             args=training_args,
             train_dataset=train_loader.dataset,
             eval_dataset=val_loader.dataset,
             tokenizer=self.processor,  # Used for saving
+            data_collator=self.collate_fn,  # Custom collator for variable-sized labels
         )
 
         # Train

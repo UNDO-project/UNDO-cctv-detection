@@ -115,8 +115,8 @@ class ModelWeightsConfig(BaseModel):
         description="Path to Faster R-CNN model weights",
     )
     detr_weights: Path = Field(
-        default=Path("samples/detr_best.pt"),
-        description="Path to DETR model weights",
+        default=Path("runs/detr/final"),
+        description="Path to DETR model directory (HuggingFace format)",
     )
     detr_model_name: str = Field(
         default="facebook/detr-resnet-50",
