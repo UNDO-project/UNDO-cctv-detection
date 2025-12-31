@@ -3,48 +3,25 @@
 This module tests the Gradio UI for CCTV detection.
 """
 
-import sys
 from unittest.mock import MagicMock, patch
-
-import pytest
-
-
-# Mock YOLO class before any imports to avoid loading the actual model file
-@pytest.fixture(scope="module", autouse=True)
-def mock_yolo_class():
-    """Mock YOLO class for the entire test module.
-
-    :return: MagicMock instance
-    """
-    with patch("ultralytics.YOLO") as mock_yolo:
-        # Clear cached module if it exists
-        if "src.ui.gradio_app" in sys.modules:
-            del sys.modules["src.ui.gradio_app"]
-
-        # Configure the mock to return a MagicMock instance
-        mock_yolo.return_value = MagicMock()
-
-        # Now import the module with the mock in place
-        import src.ui.gradio_app  # noqa: F401
-
-        yield mock_yolo
 
 
 class TestCreateDemo:
     """Test create_demo function."""
 
-    @patch("src.ui.gradio_app.YOLO")
-    def test_create_demo_returns_gradio_blocks(self, mock_yolo_class):
+    @patch("src.ui.gradio_app.CCTVDetectionApp")
+    def test_create_demo_returns_gradio_blocks(self, mock_app_class):
         """Test that create_demo returns a Gradio Blocks object.
 
-        :param mock_yolo_class: Mocked YOLO class
+        :param mock_app_class: Mocked CCTVDetectionApp class
         :return: None
         """
         from src.ui.gradio_app import create_demo
 
-        # Mock the model instance
-        mock_model = MagicMock()
-        mock_yolo_class.return_value = mock_model
+        # Mock the app instance
+        mock_app = MagicMock()
+        mock_app.detectors = {"YOLOv8": MagicMock()}
+        mock_app_class.return_value = mock_app
 
         demo = create_demo()
 
@@ -53,23 +30,24 @@ class TestCreateDemo:
         # Gradio Blocks objects have a launch method
         assert hasattr(demo, "launch")
 
-    @patch("src.ui.gradio_app.YOLO")
-    def test_create_demo_loads_model(self, mock_yolo_class):
-        """Test that create_demo loads the YOLO model.
+    @patch("src.ui.gradio_app.CCTVDetectionApp")
+    def test_create_demo_initializes_app(self, mock_app_class):
+        """Test that create_demo initializes CCTVDetectionApp.
 
-        :param mock_yolo_class: Mocked YOLO class
+        :param mock_app_class: Mocked CCTVDetectionApp class
         :return: None
         """
         from src.ui.gradio_app import create_demo
 
-        # Mock the model instance
-        mock_model = MagicMock()
-        mock_yolo_class.return_value = mock_model
+        # Mock the app instance
+        mock_app = MagicMock()
+        mock_app.detectors = {"YOLOv8": MagicMock()}
+        mock_app_class.return_value = mock_app
 
         create_demo()
 
-        # Verify YOLO was instantiated
-        mock_yolo_class.assert_called_once()
+        # Verify CCTVDetectionApp was instantiated
+        mock_app_class.assert_called_once()
 
 
 class TestLaunchUI:

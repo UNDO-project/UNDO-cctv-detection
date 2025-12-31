@@ -222,12 +222,12 @@ class TestDETRDataset:
         )
 
         # Get item
-        pixel_values, target = dataset[0]
+        item = dataset[0]
 
         # Verify processor was called
         mock_processor.assert_called_once()
-        assert pixel_values.shape == (3, 800, 800)
-        assert "class_labels" in target
+        assert item["pixel_values"].shape == (3, 800, 800)
+        assert "class_labels" in item["labels"]
 
     def test_empty_dataset(self):
         """Test dataset with no samples."""
