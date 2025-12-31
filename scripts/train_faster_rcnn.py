@@ -4,6 +4,8 @@ This script orchestrates the training of a Faster R-CNN model
 on the CCTV detection dataset using PyTorch and torchvision.
 """
 
+import json
+
 import torch
 import torchvision.transforms as t
 from loguru import logger
@@ -109,7 +111,7 @@ def main() -> None:
 
     # Train the model
     logger.info("Starting model training...")
-    trainer.train(
+    training_metrics = trainer.train(
         device=device,
         train_loader=train_loader,
         val_loader=val_loader,
@@ -119,9 +121,29 @@ def main() -> None:
     logger.info("Saving model weights...")
     settings.models.faster_rcnn_weights.parent.mkdir(parents=True, exist_ok=True)
     torch.save(trainer.model.state_dict(), settings.models.faster_rcnn_weights)
+
+    # Compute mAP metrics on validation set
+    logger.info("Computing mAP metrics on validation set...")
+    map_metrics = trainer.evaluate_map(val_loader, device)
+
+    # Save training metrics for dashboard
+    runs_dir = settings.paths.project_root / "runs" / "faster_rcnn" / "train"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    metrics_file = runs_dir / "training_metrics.json"
+
+    # Add mAP metrics to training metrics
+    training_metrics["final_map50"] = map_metrics["map50"]
+    training_metrics["final_map"] = map_metrics["map"]
+
+    with open(metrics_file, "w") as f:
+        json.dump(training_metrics, f, indent=2)
+
+    logger.info(f"Training metrics saved to {metrics_file}")
     logger.success(
-        f"Faster R-CNN training complete! Weights saved to {settings.models.faster_rcnn_weights}"
+        f"Faster R-CNN training complete! "
+        f"mAP@0.5={map_metrics['map50']:.3f}, mAP@0.5:0.95={map_metrics['map']:.3f}"
     )
+    logger.success(f"Model weights saved to {settings.models.faster_rcnn_weights}")
 
 
 if __name__ == "__main__":
