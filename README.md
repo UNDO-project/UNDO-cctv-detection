@@ -166,6 +166,22 @@ uv run cctv-train-faster-rcnn
 uv run python scripts/train_faster_rcnn.py
 ```
 
+**Note**: Faster R-CNN training automatically computes mAP@0.5 and mAP@0.5:0.95 metrics after training completes using the COCO evaluation protocol. The metrics are saved to `runs/faster_rcnn/train/training_metrics.json` and displayed in the Performance Dashboard.
+
+### Evaluating Faster R-CNN Models
+
+If you need to re-evaluate an already-trained Faster R-CNN model (e.g., after updating the validation set), use the standalone evaluation script:
+
+```bash
+# Evaluate trained Faster R-CNN model and compute mAP
+uv run cctv-evaluate-faster-rcnn
+
+# OR run directly
+uv run python scripts/evaluate_faster_rcnn.py
+```
+
+This loads the trained model from `samples/fasterrcnn_best.pt`, runs inference on the validation set, and updates both `evaluation_metrics.json` and `training_metrics.json` files.
+
 ### Training DETR
 
 ```bash
@@ -175,6 +191,22 @@ uv run cctv-train-detr
 # OR run directly
 uv run python scripts/train_detr.py
 ```
+
+**Note**: DETR training automatically computes mAP@0.5 and mAP@0.5:0.95 metrics after training completes using the COCO evaluation protocol. The metrics are saved to `runs/detr/final/evaluation_metrics.json` and displayed in the Performance Dashboard.
+
+### Evaluating DETR Models
+
+If you need to re-evaluate an already-trained DETR model (e.g., after updating the validation set), use the standalone evaluation script:
+
+```bash
+# Evaluate trained DETR model and compute mAP
+uv run cctv-evaluate-detr
+
+# OR run directly
+uv run python scripts/evaluate_detr.py
+```
+
+This loads the trained model from `runs/detr/final/`, runs inference on the validation set, and updates the evaluation metrics file.
 
 ### YOLOv8 Training Results
 
@@ -323,6 +355,7 @@ The following console scripts are available after installation:
 | `uv run cctv-train` | Train YOLOv8 model |
 | `uv run cctv-train-faster-rcnn` | Train Faster R-CNN model |
 | `uv run cctv-train-detr` | Train DETR model |
+| `uv run cctv-evaluate-faster-rcnn` | Evaluate trained Faster R-CNN model and compute mAP |
 | `uv run cctv-evaluate-detr` | Evaluate trained DETR model and compute mAP |
 | `uv run cctv-prepare-examples` | Prepare example images for UI |
 | `uv run cctv-benchmark` | Benchmark inference speed across all models |
