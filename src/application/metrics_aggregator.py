@@ -75,26 +75,49 @@ class MetricsAggregator:
                 state = json.load(f)
 
             # Extract loss history from log_history
+            # For DETR, training loss is logged every N steps, eval loss once per epoch
+            # We need to extract epoch-aligned data for proper visualization
             train_losses = []
+            train_epochs = []
             eval_losses = []
+            eval_epochs = []
 
             for entry in state.get("log_history", []):
-                if "loss" in entry:
+                if "loss" in entry and "eval_loss" not in entry:
                     train_losses.append(entry["loss"])
+                    train_epochs.append(entry.get("epoch", 0))
                 if "eval_loss" in entry:
                     eval_losses.append(entry["eval_loss"])
+                    eval_epochs.append(entry.get("epoch", 0))
 
-            # Get final metrics
-            final_metrics = state.get("best_metric")
+            # Try to load evaluation metrics (computed after training)
+            eval_file = run_dir.parent / "final" / "evaluation_metrics.json"
+            if eval_file.exists():
+                try:
+                    with open(eval_file) as f:
+                        eval_metrics = json.load(f)
+                    final_map50 = eval_metrics.get("map50", 0.0)
+                    final_map = eval_metrics.get("map", 0.0)
+                    logger.info(f"Loaded DETR evaluation metrics from {eval_file}")
+                except Exception as e:
+                    logger.warning(f"Failed to load evaluation metrics: {e}")
+                    final_map50 = 0.0
+                    final_map = 0.0
+            else:
+                # No evaluation metrics available yet
+                final_map50 = 0.0
+                final_map = 0.0
 
             return {
                 "model": "DETR",
                 "run_dir": str(run_dir),
-                "final_map50": final_metrics if final_metrics else 0.0,
-                "final_map": 0.0,  # DETR doesn't compute full mAP by default
+                "final_map50": final_map50,
+                "final_map": final_map,
                 "train_loss": train_losses,
+                "train_epochs": train_epochs,
                 "val_loss": eval_losses,
-                "epochs": state.get("epoch", 0),
+                "val_epochs": eval_epochs,
+                "epochs": int(state.get("epoch", 0)),
             }
         except Exception as e:
             logger.error(f"Failed to load DETR metrics from {run_dir}: {e}")
@@ -154,14 +177,19 @@ class MetricsAggregator:
                     all_metrics.append(metrics)
                     logger.info(f"Loaded YOLO metrics from {run_dir.name}")
 
-        # Find DETR runs
+        # Find DETR runs - use only the latest checkpoint
         detr_pattern = "detr/checkpoint-*"
-        for run_dir in self.runs_dir.glob(detr_pattern):
-            if run_dir.is_dir():
-                metrics = self.load_detr_metrics(run_dir)
-                if metrics:
-                    all_metrics.append(metrics)
-                    logger.info(f"Loaded DETR metrics from {run_dir.name}")
+        detr_checkpoints = sorted(
+            [d for d in self.runs_dir.glob(detr_pattern) if d.is_dir()],
+            key=lambda x: int(x.name.split("-")[1]),  # Sort by checkpoint number
+        )
+        if detr_checkpoints:
+            # Use the latest (highest numbered) checkpoint
+            latest_checkpoint = detr_checkpoints[-1]
+            metrics = self.load_detr_metrics(latest_checkpoint)
+            if metrics:
+                all_metrics.append(metrics)
+                logger.info(f"Loaded DETR metrics from {latest_checkpoint.name}")
 
         # Find Faster R-CNN runs
         fasterrcnn_pattern = "faster_rcnn/train*"

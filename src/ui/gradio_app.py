@@ -56,11 +56,21 @@ class CCTVDetectionApp:
         :rtype: ObjectDetector | None
         """
         try:
+            import torch
+
+            # Faster R-CNN has MPS compatibility issues
+            # Use CUDA if available, otherwise CPU (skip MPS)
+            if model_type == "faster-rcnn" and self.device.type == "mps":
+                device = torch.device("cpu")
+                print("⚠️  Using CPU for Faster R-CNN (MPS not compatible)")
+            else:
+                device = self.device
+
             return DetectorFactory.create_detector(
                 model_type=model_type,
                 model_path=model_path,
                 class_names=self.class_names,
-                device=self.device,
+                device=device,
             )
         except Exception as e:
             print(f"Warning: Could not load {model_type} model: {e}")
@@ -211,7 +221,7 @@ def create_demo() -> gr.Blocks:
     with gr.Blocks(title="CCTV Detection - Multi-Model Comparison") as demo:
         gr.Markdown(
             """
-            # 🎥 CCTV Detection System
+            # CCTV Detection System
 
             Compare three state-of-the-art object detection models:
             - **YOLOv8**: Fast one-stage CNN detector
@@ -366,6 +376,37 @@ def create_demo() -> gr.Blocks:
                 all_metrics = aggregator.get_all_metrics()
 
                 if all_metrics:
+                    # Filter to best runs only
+                    # For models with mAP: highest mAP@0.5
+                    # For models without mAP: most epochs trained
+                    best_runs = {}
+                    for m in all_metrics:
+                        model_name = m["model"]
+                        map50_val = m.get("final_map50", 0.0)
+                        epochs = m.get("epochs", 0)
+
+                        if model_name not in best_runs:
+                            best_runs[model_name] = m
+                        else:
+                            existing_map = best_runs[model_name].get("final_map50", 0.0)
+                            existing_epochs = best_runs[model_name].get("epochs", 0)
+
+                            if map50_val > 0 and existing_map > 0:
+                                # Both have mAP, compare mAP
+                                if map50_val > existing_map:
+                                    best_runs[model_name] = m
+                            else:
+                                # No mAP available, compare epochs
+                                if epochs > existing_epochs:
+                                    best_runs[model_name] = m
+
+                    # Sort: models with mAP first (by mAP), then by epochs
+                    filtered_metrics = sorted(
+                        best_runs.values(),
+                        key=lambda x: (x.get("final_map50", 0.0), x.get("epochs", 0)),
+                        reverse=True,
+                    )
+
                     # Metrics summary table
                     gr.Markdown("#### Training Summary")
                     summary_table = create_metrics_summary_table(all_metrics)
@@ -373,12 +414,12 @@ def create_demo() -> gr.Blocks:
 
                     # mAP comparison chart
                     gr.Markdown("#### Model Performance Comparison")
-                    map_plot = create_map_comparison(all_metrics)
+                    map_plot = create_map_comparison(filtered_metrics)
                     gr.Plot(map_plot)
 
-                    # Individual loss curves
-                    gr.Markdown("#### Training History")
-                    for metrics in all_metrics:
+                    # Individual loss curves (best run per model)
+                    gr.Markdown("#### Training History (Best Runs)")
+                    for metrics in filtered_metrics:
                         loss_plot = create_loss_curve(metrics)
                         gr.Plot(loss_plot)
 
@@ -447,6 +488,34 @@ def create_demo() -> gr.Blocks:
                     - Training: 70% split
                     - Validation: 30% split
                     - Evaluation metric: mAP@0.5 (IoU threshold 0.5)
+
+                    ##### Metrics Explained
+
+                    **mAP (mean Average Precision)**
+                    - Primary metric for object detection quality
+                    - Ranges from 0-1 (higher is better)
+                    - mAP@0.5: Considers detections correct if IoU ≥ 0.5 with ground truth
+                    - mAP@0.5:0.95: Average across IoU thresholds 0.5 to 0.95 (stricter)
+
+                    **IoU (Intersection over Union)**
+                    - Measures overlap between predicted and true bounding boxes
+                    - IoU = (Area of Overlap) / (Area of Union)
+                    - IoU ≥ 0.5 typically considered "correct" detection
+
+                    **Loss Metrics**
+                    - Box Loss: Accuracy of bounding box coordinates
+                    - Classification Loss: Accuracy of object class predictions
+                    - Total Loss: Combined metric used during training (lower is better)
+
+                    **Inference Time**
+                    - Time to process a single image (milliseconds)
+                    - Measured over 100 runs with 10 warmup iterations
+                    - Reported as: mean ± std deviation
+
+                    **Confidence Threshold**
+                    - Minimum score for a detection to be shown (0-1 range)
+                    - Lower threshold: More detections (may include false positives)
+                    - Higher threshold: Fewer, more confident detections
 
                     #### Citation
                     If you use this system in research, please cite:
