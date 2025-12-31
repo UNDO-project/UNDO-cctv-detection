@@ -4,9 +4,12 @@ This script benchmarks the inference performance of YOLOv8, Faster R-CNN,
 and DETR models on the same hardware to provide fair speed comparisons.
 """
 
+import json
 import time
 
 import numpy as np
+import torch
+from loguru import logger
 from PIL import Image
 
 from src.config import settings
@@ -75,12 +78,23 @@ def main() -> None:
             continue
 
         try:
+            # Handle device compatibility issues
+            # Faster R-CNN has issues with MPS, prefer CUDA or CPU
+            model_device = device
+            if model_type == "faster-rcnn" and str(device) == "mps":
+                if torch.cuda.is_available():
+                    model_device = torch.device("cuda")
+                    print("  ℹ️  Using CUDA for Faster R-CNN (MPS compatibility issues)")
+                else:
+                    model_device = torch.device("cpu")
+                    print("  ℹ️  Using CPU for Faster R-CNN (MPS compatibility issues)")
+
             # Load detector
             detector = DetectorFactory.create_detector(
                 model_type=model_type,  # type: ignore[arg-type]
                 model_path=path,
                 class_names=["CCTV", "CCTV-SIGNS"],
-                device=device,
+                device=model_device,
             )
 
             # Run benchmark
@@ -124,6 +138,16 @@ def main() -> None:
         for model_name, stats in sorted_results:
             speedup = slowest_time / stats["mean"]
             print(f"{model_name:<20} {speedup:>6.2f}x")
+
+        # Save results to JSON for UI dashboard
+        benchmark_file = settings.paths.project_root / "runs" / "benchmark_results.json"
+        benchmark_file.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(benchmark_file, "w") as f:
+            json.dump(results, f, indent=2)
+
+        logger.success(f"Benchmark results saved to {benchmark_file}")
+        logger.info("Results will be visible in the Performance Dashboard")
 
     else:
         print("No models could be benchmarked. Ensure model weights are available.")

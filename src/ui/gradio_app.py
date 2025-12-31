@@ -12,6 +12,7 @@ from src.domain.services.object_detector import ObjectDetector
 from src.infrastructure.detector_factory import DetectorFactory, ModelType
 from src.infrastructure.device_selector import DeviceSelector
 from src.ui.visualizations import (
+    create_inference_benchmark_chart,
     create_loss_curve,
     create_map_comparison,
     create_metrics_summary_table,
@@ -423,20 +424,45 @@ def create_demo() -> gr.Blocks:
                         loss_plot = create_loss_curve(metrics)
                         gr.Plot(loss_plot)
 
-                    # Benchmark instructions
-                    gr.Markdown(
-                        """
-                        ---
-                        #### Inference Speed Benchmark
+                    # Inference speed benchmark
+                    gr.Markdown("---")
+                    gr.Markdown("#### Inference Speed Benchmark")
 
-                        To benchmark inference speed across all models, run:
-                        ```bash
-                        uv run cctv-benchmark
-                        ```
-
-                        This will measure mean inference time, standard deviation, and speedup comparisons.
-                        """
+                    # Load benchmark results if available
+                    benchmark_file = (
+                        settings.paths.project_root / "runs" / "benchmark_results.json"
                     )
+                    if benchmark_file.exists():
+                        import json
+
+                        with open(benchmark_file) as f:
+                            benchmark_results = json.load(f)
+
+                        benchmark_plot = create_inference_benchmark_chart(
+                            benchmark_results
+                        )
+                        gr.Plot(benchmark_plot)
+
+                        gr.Markdown(
+                            """
+                            *Results shown above. To re-run benchmarks with latest models:*
+                            ```bash
+                            uv run cctv-benchmark
+                            ```
+                            """
+                        )
+                    else:
+                        gr.Markdown(
+                            """
+                            To benchmark inference speed across all models, run:
+                            ```bash
+                            uv run cctv-benchmark
+                            ```
+
+                            This will measure mean inference time, standard deviation, and speedup comparisons.
+                            Results will appear here after benchmarking completes.
+                            """
+                        )
                 else:
                     gr.Markdown(
                         """
