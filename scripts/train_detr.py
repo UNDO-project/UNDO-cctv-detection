@@ -69,20 +69,21 @@ def main():
         processor=trainer.processor,
     )
 
-    # Create dataloaders with custom collate function
+    # Create dataloaders with DETR's custom collate function
+    # This handles variable-sized images by padding and creating pixel masks
     logger.info("Creating dataloaders...")
     train_loader = DataLoader(
         train_dataset,
         batch_size=settings.training.batch_size,
         shuffle=True,
-        collate_fn=lambda batch: tuple(zip(*batch, strict=True)),
+        collate_fn=trainer.collate_fn,  # Use trainer's collate function
     )
 
     val_loader = DataLoader(
         val_dataset,
         batch_size=settings.training.batch_size,
         shuffle=False,
-        collate_fn=lambda batch: tuple(zip(*batch, strict=True)),
+        collate_fn=trainer.collate_fn,  # Use trainer's collate function
     )
 
     # Select optimal device for training
