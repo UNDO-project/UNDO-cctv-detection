@@ -482,7 +482,7 @@ def create_demo() -> gr.Blocks:
                     f"""
                     ### CCTV Detection System
 
-                    **Version:** 0.2.0
+                    **Version:** 1.0.0
                     **Device:** {app.device}
 
                     #### Model Details
