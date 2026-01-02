@@ -6,7 +6,6 @@ annotations to DETR-compatible format for transformer-based object detection.
 
 from typing import Any
 
-import torch
 from PIL import Image
 from torch.utils.data import Dataset
 from transformers import DetrImageProcessor
@@ -46,17 +45,14 @@ class DETRDataset(Dataset):
         """
         return len(self.image_paths)
 
-    def __getitem__(self, idx: int) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+    def __getitem__(self, idx: int) -> dict[str, Any]:
         """Get image and target for training.
 
         :param idx: Index of sample to retrieve
-        :return: Tuple of (pixel_values, target_dict) where target_dict contains:
-            - class_labels: [num_objects] class IDs
-            - boxes: [num_objects, 4] bounding boxes (cx, cy, w, h normalized)
-            - image_id: Image identifier
-            - area: Area of each bounding box
-            - iscrowd: Whether each object is a crowd annotation
-        :rtype: Tuple[torch.Tensor, Dict[str, torch.Tensor]]
+        :return: Dictionary with:
+            - pixel_values: Preprocessed image tensor
+            - labels: Target dict containing class_labels, boxes, image_id, area, iscrowd
+        :rtype: dict[str, Any]
         """
         image_path = self.image_paths[idx]
         ann = self.annotations[idx]
@@ -64,13 +60,23 @@ class DETRDataset(Dataset):
         # Load image
         image = Image.open(image_path).convert("RGB")
 
-        # Format target
+        # Convert to COCO format expected by DETR processor
+        # The processor expects: {"image_id": int, "annotations": [{"bbox": [...], "category_id": int, ...}, ...]}
+        # For negative samples (images with no objects), annotations will be an empty list
+        coco_annotations = []
+        for i in range(len(ann["boxes"])):
+            coco_annotations.append(
+                {
+                    "bbox": ann["boxes"][i],
+                    "category_id": ann["category_ids"][i],
+                    "area": ann["area"][i],
+                    "iscrowd": ann["iscrowd"][i],
+                }
+            )
+
         target = {
-            "class_labels": torch.tensor(ann["category_ids"], dtype=torch.long),
-            "boxes": torch.tensor(ann["boxes"], dtype=torch.float32),
-            "image_id": torch.tensor([ann["image_id"]]),
-            "area": torch.tensor(ann["area"], dtype=torch.float32),
-            "iscrowd": torch.tensor(ann["iscrowd"], dtype=torch.int64),
+            "image_id": ann["image_id"],
+            "annotations": coco_annotations,  # Empty list for negative samples
         }
 
         # Preprocess
@@ -82,6 +88,17 @@ class DETRDataset(Dataset):
 
         # Remove batch dimension
         pixel_values = encoding["pixel_values"].squeeze(0)
-        target = encoding["labels"][0]
 
-        return pixel_values, target
+        # Extract and flatten the labels to regular tensors
+        labels = encoding["labels"][0]
+
+        # Convert BatchFeature to regular dict with tensors
+        labels_dict = {
+            "class_labels": labels["class_labels"],
+            "boxes": labels["boxes"],
+        }
+
+        return {
+            "pixel_values": pixel_values,
+            "labels": labels_dict,
+        }

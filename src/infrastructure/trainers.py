@@ -2,6 +2,8 @@ from pathlib import Path
 
 import torch
 from loguru import logger
+from pycocotools.coco import COCO
+from pycocotools.cocoeval import COCOeval
 from torch import optim
 from torch.utils.data import DataLoader
 from torchvision.models.detection import (
@@ -114,7 +116,7 @@ class FasterRCNNTrainer(ModelTrainer):
         train_loader: DataLoader | None = None,
         val_loader: DataLoader | None = None,
         data_config: Path | None = None,
-    ) -> None:
+    ) -> dict:
         """Train the Faster R-CNN model using the provided dataloaders.
 
         Faster R-CNN training uses DataLoaders, not config files.
@@ -123,8 +125,8 @@ class FasterRCNNTrainer(ModelTrainer):
         :param train_loader: Training dataloader (required for Faster R-CNN)
         :param val_loader: Validation dataloader (required for Faster R-CNN)
         :param data_config: Not used by Faster R-CNN
-        :return: None
-        :rtype: None
+        :return: Training metrics dictionary with losses per epoch
+        :rtype: dict
         :raises ValueError: If train_loader or val_loader not provided
         """
         # Validate that loaders are provided
@@ -141,6 +143,10 @@ class FasterRCNNTrainer(ModelTrainer):
             params=params, lr=self.learning_rate, momentum=0.9, weight_decay=0.0005
         )
 
+        # Track metrics for dashboard
+        train_losses = []
+        val_losses = []
+
         for epoch in range(self.epochs):
             self.model.train()
             epoch_loss = 0.0
@@ -156,20 +162,35 @@ class FasterRCNNTrainer(ModelTrainer):
                 loss.backward()
                 optimizer.step()
                 epoch_loss += loss.item()
-            logger.info(
-                f"Epoch [{epoch + 1}/{self.epochs}], Training Loss: {epoch_loss / len(train_loader):.4f}"
-            )
-            # Optionally, evaluate on the validation set after each epoch
-            self.evaluate(val_loader, device)
 
-    def evaluate(self, val_loader: DataLoader, device: torch.device) -> None:
-        """
-        Evaluate the model on the validation set and log the loss.
+            avg_train_loss = epoch_loss / len(train_loader)
+            train_losses.append(avg_train_loss)
+
+            logger.info(
+                f"Epoch [{epoch + 1}/{self.epochs}], Training Loss: {avg_train_loss:.4f}"
+            )
+            # Evaluate on the validation set after each epoch
+            val_loss = self.evaluate(val_loader, device)
+            val_losses.append(val_loss)
+
+        return {
+            "train_losses": train_losses,
+            "val_losses": val_losses,
+            "epochs": self.epochs,
+        }
+
+    def evaluate(self, val_loader: DataLoader, device: torch.device) -> float:
+        """Evaluate the model on the validation set and return the loss.
+
+        Note: Model must stay in training mode to return loss dictionaries.
+        We use torch.no_grad() to prevent gradient computation.
+
         :param val_loader: Validation dataloader
         :param device: Device for evaluation
-        :return:
+        :return: Average validation loss
+        :rtype: float
         """
-        self.model.eval()
+        self.model.train()  # Keep in train mode to get losses
         total_loss = 0.0
         with torch.no_grad():
             for images, targets in val_loader:
@@ -178,4 +199,145 @@ class FasterRCNNTrainer(ModelTrainer):
                 loss_dict = self.model(images, targets)
                 loss = torch.stack(list(loss_dict.values())).sum()
                 total_loss += loss.item()
-            logger.info(f"Validation Loss: {total_loss / len(val_loader):.4f}")
+        avg_loss = total_loss / len(val_loader)
+        logger.info(f"Validation Loss: {avg_loss:.4f}")
+        return avg_loss
+
+    def evaluate_map(
+        self,
+        val_loader: DataLoader,
+        device: torch.device,
+        score_threshold: float = 0.05,
+    ) -> dict[str, float]:
+        """Evaluate model using COCO mAP metrics.
+
+        :param val_loader: Validation dataloader
+        :param device: Device for evaluation
+        :param score_threshold: Minimum score threshold for predictions
+        :return: Dictionary with mAP@0.5 and mAP@0.5:0.95
+        :rtype: dict
+        """
+        logger.info("Computing mAP metrics using COCO evaluation...")
+        self.model.eval()
+        self.model.to(device)
+
+        # Prepare COCO format data structures
+        coco_gt = {
+            "images": [],
+            "annotations": [],
+            "categories": [
+                {"id": i, "name": f"class_{i}"} for i in range(self.num_classes)
+            ],
+        }
+        coco_predictions = []
+
+        annotation_id = 0
+        image_id = 0
+
+        with torch.no_grad():
+            for images, targets in val_loader:
+                # Move images to device
+                images = [img.to(device) for img in images]
+
+                # Run inference
+                predictions = self.model(images)
+
+                # Process each image in batch
+                for _i, (img, target, pred) in enumerate(
+                    zip(images, targets, predictions, strict=False)
+                ):
+                    # Get image dimensions (C, H, W)
+                    _, h, w = img.shape
+
+                    # Add image to ground truth
+                    coco_gt["images"].append(
+                        {"id": image_id, "width": int(w), "height": int(h)}
+                    )
+
+                    # Add ground truth annotations
+                    gt_boxes = target["boxes"]  # Format: [x1, y1, x2, y2]
+                    gt_labels = target["labels"]
+
+                    for box, label in zip(gt_boxes, gt_labels, strict=False):
+                        # Convert from [x1, y1, x2, y2] to COCO format [x, y, w, h]
+                        x1, y1, x2, y2 = box.tolist()
+                        box_w = x2 - x1
+                        box_h = y2 - y1
+
+                        coco_gt["annotations"].append(
+                            {
+                                "id": annotation_id,
+                                "image_id": image_id,
+                                "category_id": int(label),
+                                "bbox": [x1, y1, box_w, box_h],
+                                "area": box_w * box_h,
+                                "iscrowd": 0,
+                            }
+                        )
+                        annotation_id += 1
+
+                    # Process predictions
+                    pred_boxes = pred["boxes"]  # Format: [x1, y1, x2, y2]
+                    pred_labels = pred["labels"]
+                    pred_scores = pred["scores"]
+
+                    # Filter by score threshold
+                    for box, label, score in zip(
+                        pred_boxes, pred_labels, pred_scores, strict=False
+                    ):
+                        if score > score_threshold:
+                            # Convert from [x1, y1, x2, y2] to COCO format [x, y, w, h]
+                            x1, y1, x2, y2 = box.tolist()
+                            box_w = x2 - x1
+                            box_h = y2 - y1
+
+                            coco_predictions.append(
+                                {
+                                    "image_id": image_id,
+                                    "category_id": int(label),
+                                    "bbox": [x1, y1, box_w, box_h],
+                                    "score": float(score),
+                                }
+                            )
+
+                    image_id += 1
+
+        # Create COCO objects and evaluate
+        import json
+        import os
+        import tempfile
+
+        # Write ground truth to temp file
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump(coco_gt, f)
+            gt_file = f.name
+
+        # Create COCO ground truth object
+        coco_gt_obj = COCO(gt_file)
+
+        # Load predictions
+        coco_dt = coco_gt_obj.loadRes(coco_predictions) if coco_predictions else None
+
+        if coco_dt is None or len(coco_predictions) == 0:
+            logger.warning("No predictions generated, mAP = 0.0")
+            os.unlink(gt_file)
+            return {"map50": 0.0, "map": 0.0}
+
+        # Evaluate
+        coco_eval = COCOeval(coco_gt_obj, coco_dt, "bbox")
+        coco_eval.evaluate()
+        coco_eval.accumulate()
+        coco_eval.summarize()
+
+        # Extract metrics
+        map50 = coco_eval.stats[1]  # mAP@0.5
+        map_full = coco_eval.stats[0]  # mAP@0.5:0.95
+
+        # Clean up temp file
+        os.unlink(gt_file)
+
+        logger.success(
+            f"Faster R-CNN Evaluation: mAP@0.5={map50:.3f}, mAP@0.5:0.95={map_full:.3f}"
+        )
+
+        return {"map50": float(map50), "map": float(map_full)}

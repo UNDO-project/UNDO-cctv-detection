@@ -57,7 +57,7 @@ class TestModelWeightsConfig:
 
         assert models.yolo_weights.name == "best.pt"
         assert models.faster_rcnn_weights.name == "fasterrcnn_best.pt"
-        assert models.detr_weights.name == "detr_best.pt"
+        assert models.detr_weights.name == "final"  # DETR uses directory format
 
     def test_relative_paths_are_resolved(self) -> None:
         """Test that relative paths are resolved to absolute paths."""

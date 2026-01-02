@@ -127,7 +127,11 @@ class TestDETRDetector:
         assert detector.class_names == class_names
         assert detector.device == torch.device("cpu")
         mock_processor.from_pretrained.assert_called_once()
-        mock_model.from_pretrained.assert_called_once_with(str(model_path))
+        mock_model.from_pretrained.assert_called_once_with(
+            str(model_path),
+            num_labels=len(class_names),
+            ignore_mismatched_sizes=True,
+        )
 
     @patch("src.infrastructure.detr_detector.DetrForObjectDetection")
     @patch("src.infrastructure.detr_detector.DetrImageProcessor")

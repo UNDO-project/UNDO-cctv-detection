@@ -69,20 +69,21 @@ def main():
         processor=trainer.processor,
     )
 
-    # Create dataloaders with custom collate function
+    # Create dataloaders with DETR's custom collate function
+    # This handles variable-sized images by padding and creating pixel masks
     logger.info("Creating dataloaders...")
     train_loader = DataLoader(
         train_dataset,
         batch_size=settings.training.batch_size,
         shuffle=True,
-        collate_fn=lambda batch: tuple(zip(*batch, strict=False)),
+        collate_fn=trainer.collate_fn,  # Use trainer's collate function
     )
 
     val_loader = DataLoader(
         val_dataset,
         batch_size=settings.training.batch_size,
         shuffle=False,
-        collate_fn=lambda batch: tuple(zip(*batch, strict=False)),
+        collate_fn=trainer.collate_fn,  # Use trainer's collate function
     )
 
     # Select optimal device for training
@@ -97,11 +98,23 @@ def main():
         val_loader=val_loader,
     )
 
-    # Save final weights
-    logger.info("Saving model weights...")
-    trainer.save_weights(settings.models.detr_weights)
+    # Automatically evaluate mAP after training
+    logger.info("Evaluating model performance...")
+    eval_metrics = trainer.evaluate_map(val_loader, device)
+
+    # Save evaluation metrics
+    import json
+
+    eval_file = trainer.output_dir / "final" / "evaluation_metrics.json"
+    with open(eval_file, "w") as f:
+        json.dump(eval_metrics, f, indent=2)
+
     logger.success(
-        f"DETR training complete! Weights saved to {settings.models.detr_weights}"
+        f"DETR training complete! Model saved to {trainer.output_dir / 'final'}"
+    )
+    logger.info(
+        f"Evaluation: mAP@0.5={eval_metrics['map50']:.3f}, "
+        f"mAP@0.5:0.95={eval_metrics['map']:.3f}"
     )
 
 

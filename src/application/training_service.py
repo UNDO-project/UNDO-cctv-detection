@@ -50,13 +50,13 @@ class TrainingService:
             train_data,
             batch_size,
             shuffle=True,
-            collate_fn=lambda x: tuple(zip(*x, strict=False)),
+            collate_fn=lambda x: tuple(zip(*x, strict=True)),
         )
         val_loader = DataLoader(
             val_data,
             batch_size,
             shuffle=True,
-            collate_fn=lambda x: tuple(zip(*x, strict=False)),
+            collate_fn=lambda x: tuple(zip(*x, strict=True)),
         )
 
         # Note: test_data is available but not currently used in training workflow.

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import torch
 from PIL import Image, ImageDraw, ImageFont
+from torchvision.ops import nms
 from transformers import DetrForObjectDetection, DetrImageProcessor
 
 from src.domain.services.object_detector import Detection, ObjectDetector
@@ -37,7 +38,22 @@ class DETRDetector(ObjectDetector):
 
         # Load model and processor
         self.processor = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50")
-        self.model = DetrForObjectDetection.from_pretrained(str(model_path))
+
+        # Try to load custom trained model, fall back to pretrained if not available
+        if model_path.exists() and model_path.is_dir():
+            self.model = DetrForObjectDetection.from_pretrained(
+                str(model_path),
+                num_labels=len(class_names),
+                ignore_mismatched_sizes=True,
+            )
+        else:
+            # Fall back to pretrained model with custom head
+            self.model = DetrForObjectDetection.from_pretrained(
+                "facebook/detr-resnet-50",
+                num_labels=len(class_names),
+                ignore_mismatched_sizes=True,
+            )
+
         self.model.to(self.device)
         self.model.eval()
 
@@ -71,6 +87,20 @@ class DETRDetector(ObjectDetector):
             target_sizes=target_sizes,
             threshold=confidence_threshold,
         )[0]
+
+        # Apply NMS to remove duplicate detections
+        if len(results["boxes"]) > 0:
+            # NMS requires boxes, scores, and IoU threshold
+            keep_indices = nms(
+                boxes=results["boxes"],
+                scores=results["scores"],
+                iou_threshold=0.5,  # Remove boxes with >50% overlap
+            )
+
+            # Filter results to keep only non-overlapping boxes
+            results["boxes"] = results["boxes"][keep_indices]
+            results["scores"] = results["scores"][keep_indices]
+            results["labels"] = results["labels"][keep_indices]
 
         # Format detections
         detections = []
