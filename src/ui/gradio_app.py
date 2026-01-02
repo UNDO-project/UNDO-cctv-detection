@@ -482,7 +482,7 @@ def create_demo() -> gr.Blocks:
                     f"""
                     ### CCTV Detection System
 
-                    **Version:** 0.2.0
+                    **Version:** 1.0.0
                     **Device:** {app.device}
 
                     #### Model Details
@@ -556,7 +556,7 @@ def create_demo() -> gr.Blocks:
 
                     ---
 
-                    **License:** CC0 1.0 Universal (Public Domain)
+                    **License:** GNU General Public License v3.0
                     **Repository:** [GitHub](https://github.com/jethronap/cctv_detection)
                     """
                 )

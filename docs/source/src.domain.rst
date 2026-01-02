@@ -12,13 +12,11 @@ Subpackages
 Submodules
 ----------
 
-src.domain.camera module
-------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: src.domain.camera
-   :members:
-   :show-inheritance:
-   :undoc-members:
+   src.domain.camera
+   src.domain.exceptions
 
 Module contents
 ---------------
