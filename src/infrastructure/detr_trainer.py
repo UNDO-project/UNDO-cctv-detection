@@ -57,13 +57,29 @@ class DETRTrainer(ModelTrainer):
 
         # Initialize processor and model
         self.processor = DetrImageProcessor.from_pretrained(model_name)
+
+        # Load pretrained DETR with custom classification head
+        # This will show warnings about mismatched weights - this is expected!
+        # We're doing transfer learning: keeping backbone + transformer, replacing classifier
+        logger.info(
+            f"Loading pretrained {model_name} and adapting for {num_labels} classes..."
+        )
+        logger.info(
+            "Note: Warnings about mismatched 'class_labels_classifier' weights are "
+            "expected during transfer learning - the classification head is being "
+            "replaced to match your custom dataset"
+        )
+
         self.model = DetrForObjectDetection.from_pretrained(
             model_name,
             num_labels=num_labels,
             ignore_mismatched_sizes=True,  # Allow head replacement
         )
 
-        logger.info(f"Initialized DETR trainer with {model_name}")
+        logger.success(
+            f"✅ DETR model loaded: backbone + transformer from pretrained, "
+            f"classification head randomly initialized for {num_labels} classes"
+        )
 
     @staticmethod
     def collate_fn(batch):
