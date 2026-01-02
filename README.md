@@ -1,6 +1,6 @@
 # 📹 CCTV Detection System
 
-![License](https://img.shields.io/badge/license-CC0%201.0-blue)
+![License](https://img.shields.io/badge/license-GPL--3.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11+-green)
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen)
 
@@ -118,7 +118,7 @@ Contributions are welcome! Please see the [Development Guide](docs/source/DEVELO
 
 ## 📄 License
 
-CC0 1.0 Universal (Public Domain) - See [LICENSE](LICENSE)
+This project is licensed under the GNU General Public License v3.0 - See [LICENSE](LICENSE)
 
 ## 🙏 Acknowledgments
 
