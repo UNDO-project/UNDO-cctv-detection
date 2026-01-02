@@ -138,10 +138,45 @@ class TestDETRDataPreparer:
             f.write("0 0.5\n")  # Too few values
             f.write("\n")  # Empty line
 
-        # Prepare annotations (should skip due to no valid boxes)
+        # Prepare annotations (should include as negative sample with empty boxes)
         annotations = preparer.prepare_annotations(images_dir, labels_dir)
 
-        assert len(annotations) == 0
+        # Changed from 0 to 1 - empty label files are now included as negative samples
+        assert len(annotations) == 1
+        assert annotations[0]["boxes"] == []
+        assert annotations[0]["category_ids"] == []
+
+    def test_prepare_annotations_with_empty_label_file(self, tmp_path: Path):
+        """Test that empty label files are included as negative samples."""
+        preparer = DETRDataPreparer(class_names=["CCTV"])
+
+        # Create test directories
+        images_dir = tmp_path / "images"
+        labels_dir = tmp_path / "labels"
+        images_dir.mkdir()
+        labels_dir.mkdir()
+
+        # Create dummy image
+        img = Image.new("RGB", (640, 480), color="red")
+        img_path = images_dir / "test.jpg"
+        img.save(img_path)
+
+        # Create empty label file (negative sample - no CCTVs in image)
+        label_path = labels_dir / "test.txt"
+        label_path.touch()  # Create empty file
+
+        # Prepare annotations (should include as negative sample)
+        annotations = preparer.prepare_annotations(images_dir, labels_dir)
+
+        assert len(annotations) == 1
+        ann = annotations[0]
+
+        assert ann["image_id"] == 0
+        assert str(img_path) == ann["image_path"]
+        assert ann["boxes"] == []  # No boxes for negative sample
+        assert ann["category_ids"] == []  # No categories for negative sample
+        assert ann["area"] == []
+        assert ann["iscrowd"] == []
 
 
 class TestDETRDataset:
@@ -239,3 +274,56 @@ class TestDETRDataset:
         )
 
         assert len(dataset) == 0
+
+    @patch("src.infrastructure.detr_dataset.Image.open")
+    def test_negative_sample_with_zero_boxes(self, mock_image_open):
+        """Test that dataset handles negative samples (images with no boxes) correctly."""
+        # Setup mock image
+        mock_img = MagicMock(spec=Image.Image)
+        mock_img.convert.return_value = mock_img
+        mock_image_open.return_value = mock_img
+
+        # Setup mock processor to handle empty annotations
+        mock_processor = MagicMock()
+        mock_processor.return_value = {
+            "pixel_values": torch.randn(1, 3, 800, 800),
+            "labels": [
+                {
+                    "class_labels": torch.tensor([]),  # Empty for negative sample
+                    "boxes": torch.tensor([]).reshape(0, 4),  # Empty boxes
+                }
+            ],
+        }
+
+        # Create dataset with negative sample (no boxes)
+        image_paths = ["negative_sample.jpg"]
+        annotations = [
+            {
+                "image_id": 0,
+                "boxes": [],  # No boxes - negative sample
+                "category_ids": [],
+                "area": [],
+                "iscrowd": [],
+            }
+        ]
+
+        dataset = DETRDataset(
+            image_paths=image_paths,
+            annotations=annotations,
+            processor=mock_processor,
+        )
+
+        # Get item - should not raise error
+        item = dataset[0]
+
+        # Verify processor was called with empty annotations
+        call_args = mock_processor.call_args
+        assert call_args is not None
+        target = call_args[1]["annotations"]
+        assert target["annotations"] == []  # Empty list for negative sample
+
+        # Verify output structure is valid
+        assert "pixel_values" in item
+        assert "labels" in item
+        assert item["labels"]["class_labels"].shape[0] == 0  # No classes
+        assert item["labels"]["boxes"].shape[0] == 0  # No boxes
