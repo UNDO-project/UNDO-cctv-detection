@@ -4,53 +4,23 @@ src.infrastructure package
 Submodules
 ----------
 
-src.infrastructure.data\_loaders module
----------------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: src.infrastructure.data_loaders
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-src.infrastructure.dataset\_preparer\_impl module
--------------------------------------------------
-
-.. automodule:: src.infrastructure.dataset_preparer_impl
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-src.infrastructure.image\_converter\_impl module
-------------------------------------------------
-
-.. automodule:: src.infrastructure.image_converter_impl
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-src.infrastructure.image\_scraper module
-----------------------------------------
-
-.. automodule:: src.infrastructure.image_scraper
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-src.infrastructure.splitters module
------------------------------------
-
-.. automodule:: src.infrastructure.splitters
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-src.infrastructure.trainers module
-----------------------------------
-
-.. automodule:: src.infrastructure.trainers
-   :members:
-   :show-inheritance:
-   :undoc-members:
+   src.infrastructure.data_loaders
+   src.infrastructure.dataset_preparer_impl
+   src.infrastructure.detector_factory
+   src.infrastructure.detr_data_preparer
+   src.infrastructure.detr_dataset
+   src.infrastructure.detr_detector
+   src.infrastructure.detr_trainer
+   src.infrastructure.device_selector
+   src.infrastructure.faster_rcnn_dataset
+   src.infrastructure.faster_rcnn_detector
+   src.infrastructure.image_converter_impl
+   src.infrastructure.splitters
+   src.infrastructure.trainers
+   src.infrastructure.yolo_detector
 
 Module contents
 ---------------

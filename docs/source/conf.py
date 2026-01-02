@@ -11,9 +11,9 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../.."))
 
-project = "UNDO CCTV-detection"
-copyright = "2025, i.efth"
-author = "i.efth"
+project = "UNDO | CCTV-detection"
+copyright = "2025, jethronap"
+author = "jethronap"
 release = "0.1.0"
 
 # -- General configuration ---------------------------------------------------
@@ -23,12 +23,32 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "myst_parser",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = []
 
 language = "python"
+
+# Source file suffixes
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".md": "markdown",
+}
+
+# MyST parser configuration
+myst_enable_extensions = [
+    "colon_fence",
+    "deflist",
+    "tasklist",
+    "fieldlist",
+    "attrs_inline",
+]
+
+myst_heading_anchors = 3
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

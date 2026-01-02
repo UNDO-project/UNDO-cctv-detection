@@ -10,26 +10,16 @@ Subpackages
    src.application
    src.domain
    src.infrastructure
-   src.presentation
+   src.tools
+   src.ui
 
 Submodules
 ----------
 
-src.config module
------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: src.config
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-src.split\_data module
-----------------------
-
-.. automodule:: src.split_data
-   :members:
-   :show-inheritance:
-   :undoc-members:
+   src.config
 
 Module contents
 ---------------
