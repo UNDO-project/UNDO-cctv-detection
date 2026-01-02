@@ -208,6 +208,68 @@ uv run python scripts/evaluate_detr.py
 
 This loads the trained model from `runs/detr/final/`, runs inference on the validation set, and updates the evaluation metrics file.
 
+### Model Comparison Methodology
+
+This project compares three state-of-the-art object detection architectures (YOLOv8, Faster R-CNN, DETR) on CCTV detection. Understanding the differences in their learning characteristics is crucial for fair comparison.
+
+#### Training Efficiency vs Peak Performance
+
+Different architectures have different convergence speeds and optimal training schedules:
+
+| Model | Architecture | Typical Convergence | Default Epochs |
+|-------|--------------|---------------------|----------------|
+| **YOLOv8** | Single-stage CNN | Fast (20-50 epochs) | 20 |
+| **Faster R-CNN** | Two-stage CNN | Medium (50-100 epochs) | 20 |
+| **DETR** | Transformer-based | Slow (100-300 epochs) | 20 |
+
+**Important Notes:**
+
+1. **Equal Epochs Comparison (Default)**: Training all models for the same number of epochs (20) shows **training efficiency** - which architecture learns fastest with limited training budget. This is useful for understanding sample efficiency and quick prototyping scenarios.
+
+2. **Convergence Comparison**: To compare **peak performance**, each model should be trained until convergence:
+   - DETR typically needs 100-300 epochs to match CNN-based detectors
+   - This comparison shows the best each architecture can achieve
+   - Training cost (time, compute) differs significantly
+
+3. **Production Considerations**: For deployment, you train once and use indefinitely, so peak performance may matter more than training efficiency.
+
+#### Customizing Training Duration
+
+By default, all models train for 20 epochs (configurable via environment variables). To modify training parameters:
+
+**Using Environment Variables:**
+```bash
+# Set epochs for all models
+export CCTV_TRAINING__EPOCHS=50
+uv run cctv-train-detr
+
+# Or set per-session
+CCTV_TRAINING__EPOCHS=100 uv run cctv-train-detr
+```
+
+**Using .env File:**
+```bash
+# Create .env in project root
+echo "CCTV_TRAINING__EPOCHS=100" > .env
+echo "CCTV_TRAINING__BATCH_SIZE=8" >> .env
+
+# Training will use these values
+uv run cctv-train-detr
+```
+
+See [Configuration](#configuration) section for all available environment variables.
+
+#### Interpreting Performance Dashboard
+
+The Performance Dashboard shows comparative metrics with status indicators:
+
+- **✅ Excellent** (mAP@0.5 ≥ 0.7): Production-ready performance
+- **✅ Good** (mAP@0.5 ≥ 0.5): Acceptable performance
+- **🔄 In Progress** (mAP@0.5 ≥ 0.3): Learning but needs more training (common for DETR in early epochs)
+- **⚠️ Needs Training** (mAP@0.5 < 0.3): Very early stage or insufficient training
+
+**When comparing models**, consider both the metric values **and** the training cost (epochs, time). A model with lower mAP after fewer epochs might eventually outperform others given sufficient training.
+
 ### YOLOv8 Training Results
 
 Our custom-trained YOLOv8 model achieved strong performance after 20 epochs:
