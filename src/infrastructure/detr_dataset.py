@@ -62,6 +62,7 @@ class DETRDataset(Dataset):
 
         # Convert to COCO format expected by DETR processor
         # The processor expects: {"image_id": int, "annotations": [{"bbox": [...], "category_id": int, ...}, ...]}
+        # For negative samples (images with no objects), annotations will be an empty list
         coco_annotations = []
         for i in range(len(ann["boxes"])):
             coco_annotations.append(
@@ -75,7 +76,7 @@ class DETRDataset(Dataset):
 
         target = {
             "image_id": ann["image_id"],
-            "annotations": coco_annotations,
+            "annotations": coco_annotations,  # Empty list for negative samples
         }
 
         # Preprocess

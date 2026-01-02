@@ -99,17 +99,18 @@ class DETRDataPreparer:
                     boxes.append(coco_bbox)
                     category_ids.append(class_id)
 
+            # Include images with no boxes as negative samples
+            # This helps reduce false positives during training
             if not boxes:
-                logger.warning(f"No valid boxes in {label_path.name}")
-                continue
+                logger.debug(f"Including negative sample (no boxes): {label_path.name}")
 
-            # Create annotation
+            # Create annotation (including empty boxes for negative samples)
             annotations.append(
                 {
                     "image_id": image_id,
                     "image_path": str(img_path),
-                    "boxes": boxes,
-                    "category_ids": category_ids,
+                    "boxes": boxes,  # Empty list for negative samples
+                    "category_ids": category_ids,  # Empty list for negative samples
                     "area": [b[2] * b[3] for b in boxes],  # width * height
                     "iscrowd": [0] * len(boxes),  # No crowd annotations
                 }
