@@ -1,30 +1,34 @@
 # CCTV Detection System
 
+![License](https://img.shields.io/badge/license-CC0%201.0-blue)
+  ![Python](https://img.shields.io/badge/python-3.11+-green)
+  ![Tests](https://img.shields.io/badge/tests-passing-brightgreen)
+
 > This application is part of the Understanding Nordic Digital Order (UNDO) project.
 > For more details visit the project's webpage [here](https://undo-project.info).
 
 A multi-model object detection system for identifying CCTV cameras and signage using YOLOv8, Faster R-CNN, and DETR models.
 
-## Features
+## ✨ Features
 
-- **Multi-Model Support**: Compare three state-of-the-art detection architectures
-  - YOLOv8: Fast one-stage CNN detector
-  - Faster R-CNN: Accurate two-stage CNN detector
-  - DETR: Modern transformer-based detector
-- **Interactive Web UI**: Gradio-based interface with model comparison
-- **Performance Dashboard**: Training metrics visualization with interactive charts
+-  🎯 **Multi-Model Support**: Compare three state-of-the-art detection architectures
+    - YOLOv8: Fast one-stage CNN detector
+    - Faster R-CNN: Accurate two-stage CNN detector
+    - DETR: Modern transformer-based detector
+- 🎨 **Interactive Web UI**: Gradio-based interface with model comparison
+- ⚡ **Performance Dashboard**: Training metrics visualization with interactive charts
   - Loss curves, mAP comparisons, and training summaries
   - Inference speed benchmarking across all models
-- **Performance Metrics**: Real-time inference time and detection statistics
-- **Example Gallery**: Pre-loaded sample images for quick testing
+- ⏱️**Performance Metrics**: Real-time inference time and detection statistics
+- 🖼️ **Example Gallery**: Pre-loaded sample images for quick testing
 
-## Setup
+## 🚀 Setup
 
 This project uses [uv](https://github.com/astral-sh/uv) for fast, reliable package management (10-100x faster than pip).
 
-### Install uv
+### Install `uv`
 
-If you don't have uv installed:
+If you don't have `uv` installed:
 
 ```bash
 # macOS/Linux
@@ -37,12 +41,24 @@ pip install uv
 ### Install Dependencies
 
 ```bash
-# Sync all dependencies from pyproject.toml
-uv sync
+# Sync all dependencies from pyproject.toml. 
+# These options will create and activate a virtual environment.
+uv sync 
 
 # Or install with all optional dependencies (dev, docs, mypy)
 uv sync --all-extras
 ```
+
+### Download model weights
+
+```bash
+  # Place your trained model weights in samples/
+  # - samples/best.pt (YOLO)
+  # - samples/fasterrcnn_best.pt (Faster R-CNN)
+  # - samples/detr_best.pt (DETR)
+```
+
+> OR: Train the models from scratch. See section [Model Training](#-model-training) for details.
 
 ### Install Pre-commit Hooks
 
@@ -51,7 +67,7 @@ uv sync --all-extras
 uv run pre-commit install
 ```
 
-## Configuration
+## 🔧 Configuration
 
 The project uses centralized configuration in `src/config.py` with absolute paths resolved from the project root.
 
@@ -92,7 +108,7 @@ CCTV_TRAINING__EPOCHS=30
 CCTV_TRAINING__BATCH_SIZE=8
 ```
 
-## User Interface
+## 🎛️ User Interface
 
 The application provides a comprehensive web interface for CCTV detection with multi-model comparison.
 
@@ -118,7 +134,7 @@ The web interface includes five tabs:
 
 3. **Example Images**: Pre-loaded CCTV images for quick testing (click to load into Single Model tab)
 
-4. **📊 Performance Dashboard**: View training metrics, loss curves, mAP comparisons, and model performance analytics
+4. **Performance Dashboard**: View training metrics, loss curves, mAP comparisons, and model performance analytics
    - Training summary table showing epochs, mAP scores, and final losses
    - Interactive mAP comparison charts (mAP@0.5 and mAP@0.5:0.95)
    - Training history with loss curves for each model
@@ -140,7 +156,7 @@ uv run python scripts/prepare_examples.py
 
 This will copy representative images to the `examples/` directory for use in the Gradio interface.
 
-## Model Training
+## 🧠 Model Training
 
 The project supports training multiple detection architectures on custom CCTV datasets.
 
@@ -307,7 +323,7 @@ Training and validation losses decreased steadily with no major overfitting:
 
 </details>
 
-## Image Labeling
+## 🏷️ Image Labeling
 
 To label images you need [Docker](https://www.docker.com) and [Label Studio](https://labelstud.io).
 
@@ -325,7 +341,7 @@ docker run -it -p 8080:8080 -v $(pwd)/mydata:/label-studio/data heartexlabs/labe
 
 Open http://localhost:8080 in your browser. Create a username and password for local use.
 
-## Testing
+## 🧪 Development
 
 This project uses pytest for comprehensive testing with >65% code coverage.
 
@@ -362,12 +378,12 @@ tests/
 
 ### Test Coverage
 
-Current coverage: **65%+** (137+ passing tests)
+Current coverage: **60%+** (137+ passing tests)
 - Domain services: 100% coverage
 - Application services: 100% coverage
 - Infrastructure layer: 90%+ coverage
 
-## Code Quality
+## 🧹 Code Quality
 
 This project uses automated tools to ensure code quality and consistency.
 
@@ -407,7 +423,7 @@ uv run mypy src/
 
 Type hints provide IDE support and documentation value. We rely on comprehensive test coverage and Ruff for code quality in the commit workflow.
 
-## Console Scripts
+## 💻 Console Scripts
 
 The following console scripts are available after installation:
 
@@ -422,7 +438,7 @@ The following console scripts are available after installation:
 | `uv run cctv-prepare-examples` | Prepare example images for UI |
 | `uv run cctv-benchmark` | Benchmark inference speed across all models |
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```
 cctv_detection/
@@ -445,13 +461,32 @@ cctv_detection/
 └── examples/                # Example images for UI
 ```
 
-## Dataset & Model Access
+## 📊 Dataset & Model Access
 
-Although most images used in training have been collected through ethnographic research, some images come from the [Fuziih CCTV-Exposure](https://github.com/Fuziih/cctv-exposure) dataset.
+- **Classes:** CCTV (cameras), CCTV-SIGNS (signage)
+- **Format:** YOLO format (converted to COCO for DETR/Faster R-CNN)
+- **Split:** 70% train, 30% validation
+- **Source:** Ethnographic research + [Fuziih CCTV-Exposure](https://github.com/Fuziih/cctv-exposure)
 
 > **Contact us** if you want access to the full dataset or trained model weights.
 
-## Citation
+## 🤝 Contributing
+
+  Contributions welcome! Please see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
+## 📄 License
+
+  CC0 1.0 Universal (Public Domain) - See [LICENSE](LICENSE)
+
+## 🙏 Acknowledgments
+
+  - UNDO Project team
+  - [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics)
+  - [Hugging Face Transformers](https://github.com/huggingface/transformers)
+  - [Fuziih CCTV-Exposure Dataset](https://github.com/Fuziih/cctv-exposure)
+
+
+## 📚 Citation
 
 If you use this system in research, please cite:
 
@@ -463,7 +498,3 @@ If you use this system in research, please cite:
   url={https://github.com/jethronap/cctv_detection}
 }
 ```
-
-## License
-
-CC0 1.0 Universal (Public Domain)
