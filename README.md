@@ -44,7 +44,7 @@ samples/
 └── detr_best.pt         # DETR weights
 ```
 
-Or train models from scratch (see [Training Guide](docs/TRAINING.md)).
+Or train models from scratch (see [Training Guide](docs/source/TRAINING.md)).
 
 > **Need access to pre-trained weights or the full dataset?** Contact the UNDO project team.
 
@@ -62,17 +62,17 @@ Visit `http://127.0.0.1:7860` in your browser.
 
 ## 📚 Documentation
 
-Comprehensive guides are available in the `docs/` directory:
+Comprehensive guides are available in the `docs/source/` directory:
 
 | Guide | Description |
 |-------|-------------|
-| 🏗️ [Architecture](docs/ARCHITECTURE.md) | Layered architecture, design patterns, and project structure |
-| ⚙️ [Configuration](docs/CONFIGURATION.md) | Environment variables, paths, and settings customization |
-| 🧠 [Training](docs/TRAINING.md) | Training all three models with custom datasets |
-| 📈 [Evaluation](docs/EVALUATION.md) | Model evaluation and performance comparison methodology |
-| 🎛️ [UI Guide](docs/UI_GUIDE.md) | Using the web interface and preparing example images |
-| 💻 [Development](docs/DEVELOPMENT.md) | Testing, code quality, and contributing guidelines |
-| 🗂️ [Dataset](docs/DATASET.md) | Dataset structure, format conversion, and labeling |
+| 🏗️ [Architecture](docs/source/ARCHITECTURE.md) | Layered architecture, design patterns, and project structure |
+| ⚙️ [Configuration](docs/source/CONFIGURATION.md) | Environment variables, paths, and settings customization |
+| 🧠 [Training](docs/source/TRAINING.md) | Training all three models with custom datasets |
+| 📈 [Evaluation](docs/source/EVALUATION.md) | Model evaluation and performance comparison methodology |
+| 🎛️ [UI Guide](docs/source/UI_GUIDE.md) | Using the web interface and preparing example images |
+| 💻 [Development](docs/source/DEVELOPMENT.md) | Testing, code quality, and contributing guidelines |
+| 🗂️ [Dataset](docs/source/DATASET.md) | Dataset structure, format conversion, and labeling |
 
 ## 🛠️ Console Scripts
 
@@ -106,11 +106,11 @@ cctv_detection/
 └── examples/               # UI example images
 ```
 
-See [Architecture Guide](docs/ARCHITECTURE.md) for detailed information.
+See [Architecture Guide](docs/source/ARCHITECTURE.md) for detailed information.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please see the [Development Guide](docs/DEVELOPMENT.md) for:
+Contributions are welcome! Please see the [Development Guide](docs/source/DEVELOPMENT.md) for:
 - Setting up your development environment
 - Running tests and code quality checks
 - Coding standards and best practices
