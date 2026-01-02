@@ -3,7 +3,7 @@ CCTV Detection System Documentation
 
 Welcome to the CCTV Detection System documentation. This system provides multi-model object detection for identifying CCTV cameras and signage using YOLOv8, Faster R-CNN, and DETR models.
 
-.. image:: https://img.shields.io/badge/license-CC0%201.0-blue
+.. image:: https://img.shields.io/badge/license-GPL--3.0-blue
    :alt: License
 
 .. image:: https://img.shields.io/badge/python-3.11+-green
@@ -133,7 +133,7 @@ Contributions are welcome! Please see the :doc:`DEVELOPMENT` guide for:
 License
 -------
 
-CC0 1.0 Universal (Public Domain)
+GNU General Public License v3.0
 
 Indices and tables
 ==================

@@ -556,7 +556,7 @@ def create_demo() -> gr.Blocks:
 
                     ---
 
-                    **License:** CC0 1.0 Universal (Public Domain)
+                    **License:** GNU General Public License v3.0
                     **Repository:** [GitHub](https://github.com/jethronap/cctv_detection)
                     """
                 )

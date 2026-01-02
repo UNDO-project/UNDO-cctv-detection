@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "CCTV camera and signage detection application using custom-trained YOLOv8 model"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "Creative Commons"}
+license = {text = "GPL-3.0-or-later"}
 authors = [
     {name = "UNDO Project Team"},
 ]
