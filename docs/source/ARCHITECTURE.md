@@ -49,11 +49,14 @@ The innermost layer containing core business logic and abstract interfaces (cont
 
 #### Exceptions
 
-Custom exception hierarchy for domain-specific error handling:
-- `CCTVDetectionError`: Base exception
-- `ModelNotFoundError`: Model weights not found
-- `InvalidDatasetError`: Dataset validation failures
+Custom exception hierarchy for domain-specific error handling
+(`src/domain/exceptions.py`):
+- `CCTVDetectionError`: Base exception for all project-specific errors
+- `ValidationError`: Input or argument validation failures
+- `DatasetPreparationError`: Dataset preparation / format conversion failures
+- `TrainingError`: Errors raised during model training
 - `InferenceError`: Detection inference failures
+- `ConfigurationError`: Misconfigured / missing settings
 
 ### 2. Infrastructure Layer (`src/infrastructure/`)
 
@@ -155,22 +158,34 @@ Key functions:
 - `create_demo()`: Builds Gradio interface
 - `launch_ui()`: Starts web server
 
-### 5. Scripts Layer (`scripts/`)
+### 5. Tools Layer (`src/tools/`)
 
-Command-line utilities accessible via console scripts.
+Auxiliary, non-runtime tooling kept out of the core domain/infrastructure/application layers.
+
+#### Data Collection (`src/tools/data_collection/`)
+- `image_scraper.py`: Playwright-based web scraper for camera images
+- `camera_image_downloader.py`: Orchestrates scraping workflows from CSV inputs
+
+### 6. Scripts Layer (`scripts/`)
+
+Command-line entry points registered as console scripts in `pyproject.toml`.
+
+#### Application Entry Point
+- `launch_ui.py` → `cctv-ui`: Launch the Gradio web interface
 
 #### Training Scripts
-- `train_yolo.py`: YOLOv8 training orchestration
-- `train_faster_rcnn.py`: Faster R-CNN training orchestration
-- `train_detr.py`: DETR training orchestration
+- `train_yolo.py` → `cctv-train`: YOLOv8 training orchestration
+- `train_faster_rcnn.py` → `cctv-train-faster-rcnn`: Faster R-CNN training orchestration
+- `train_detr.py` → `cctv-train-detr`: DETR training orchestration
 
 #### Evaluation Scripts
-- `evaluate_faster_rcnn.py`: Compute mAP for trained Faster R-CNN
-- `evaluate_detr.py`: Compute mAP for trained DETR
+- `evaluate_faster_rcnn.py` → `cctv-evaluate-faster-rcnn`: Compute mAP for trained Faster R-CNN
+- `evaluate_detr.py` → `cctv-evaluate-detr`: Compute mAP for trained DETR
 
 #### Utility Scripts
-- `prepare_examples.py`: Copy validation images to examples/
-- `benchmark.py`: Benchmark inference speed across models
+- `prepare_examples.py` → `cctv-prepare-examples`: Copy validation images to `examples/`
+- `benchmark_models.py` → `cctv-benchmark`: Benchmark inference speed across models
+- `clean_runs.py` → `cctv-clean-runs`: Remove incomplete training run directories (dry-run by default; pass `--force` to delete)
 
 ## Design Patterns
 
@@ -299,45 +314,62 @@ Results displayed with bounding boxes
 ```
 cctv_detection/
 ├── src/
-│   ├── domain/                    # Core business logic
-│   │   ├── services/             # Abstract interfaces
+│   ├── domain/                       # Core business logic
+│   │   ├── services/                 # Abstract interfaces
 │   │   │   ├── model_trainer.py
 │   │   │   ├── object_detector.py
 │   │   │   ├── data_splitter.py
 │   │   │   ├── image_converter.py
 │   │   │   ├── dataset_preparer.py
 │   │   │   └── distance_calculator.py
-│   │   ├── camera.py             # Domain entities
-│   │   └── exceptions.py         # Custom exceptions
+│   │   ├── camera.py                 # Domain entities
+│   │   └── exceptions.py             # Custom exceptions
 │   │
-│   ├── infrastructure/           # Concrete implementations
-│   │   ├── yolo_trainer.py
-│   │   ├── faster_rcnn_trainer.py
-│   │   ├── detr_trainer.py
+│   ├── infrastructure/               # Concrete implementations
+│   │   ├── trainers.py               # YOLO + Faster R-CNN trainers
+│   │   ├── detr_trainer.py           # DETR trainer (HuggingFace)
 │   │   ├── yolo_detector.py
 │   │   ├── faster_rcnn_detector.py
 │   │   ├── detr_detector.py
 │   │   ├── detector_factory.py
 │   │   ├── data_loaders.py
+│   │   ├── faster_rcnn_dataset.py
+│   │   ├── detr_dataset.py
+│   │   ├── detr_data_preparer.py     # YOLO → COCO conversion for DETR
 │   │   ├── splitters.py
 │   │   ├── image_converter_impl.py
 │   │   ├── dataset_preparer_impl.py
-│   │   └── image_scraper.py
+│   │   └── device_selector.py        # MPS / CUDA / CPU selection
 │   │
-│   ├── application/              # Use case orchestration
+│   ├── application/                  # Use case orchestration
 │   │   ├── training_service.py
 │   │   ├── surveillance_service.py
 │   │   ├── dataset_preparation.py
-│   │   └── camera_image_downloader.py
+│   │   └── metrics_aggregator.py
 │   │
-│   ├── ui/                       # User interfaces
-│   │   └── gradio_app.py
+│   ├── ui/                           # User interfaces
+│   │   ├── gradio_app.py
+│   │   └── visualizations.py         # Detection drawing / plotting helpers
 │   │
-│   └── config.py                 # Configuration
+│   ├── tools/                        # Auxiliary, non-runtime tooling
+│   │   └── data_collection/
+│   │       ├── image_scraper.py
+│   │       └── camera_image_downloader.py
+│   │
+│   └── config.py                     # Configuration
 │
-├── scripts/                      # CLI utilities
-├── tests/                        # Test suite
-└── app.py                        # Entry point
+├── scripts/                          # CLI entry points
+│   ├── launch_ui.py
+│   ├── train_yolo.py
+│   ├── train_faster_rcnn.py
+│   ├── train_detr.py
+│   ├── evaluate_faster_rcnn.py
+│   ├── evaluate_detr.py
+│   ├── prepare_examples.py
+│   ├── benchmark_models.py
+│   └── clean_runs.py
+├── tests/                            # Test suite
+└── app.py                            # Entry point
 ```
 
 ## Testing Strategy

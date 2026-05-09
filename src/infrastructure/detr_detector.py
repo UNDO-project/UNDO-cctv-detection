@@ -4,6 +4,7 @@ This module provides a DETR (DEtection TRansformer) implementation of the
 ObjectDetector interface using HuggingFace Transformers.
 """
 
+import warnings
 from pathlib import Path
 
 import torch
@@ -39,20 +40,29 @@ class DETRDetector(ObjectDetector):
         # Load model and processor
         self.processor = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50")
 
-        # Try to load custom trained model, fall back to pretrained if not available
-        if model_path.exists() and model_path.is_dir():
-            self.model = DetrForObjectDetection.from_pretrained(
-                str(model_path),
-                num_labels=len(class_names),
-                ignore_mismatched_sizes=True,
+        # HuggingFace's meta-tensor init emits one UserWarning per ResNet-50
+        # backbone parameter (~150 lines) when from_pretrained loads the
+        # checkpoint via in-place copy. The load itself is correct; the
+        # warning is just noise. Filter it locally around the load.
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message="for .*: copying from a non-meta parameter",
+                category=UserWarning,
             )
-        else:
-            # Fall back to pretrained model with custom head
-            self.model = DetrForObjectDetection.from_pretrained(
-                "facebook/detr-resnet-50",
-                num_labels=len(class_names),
-                ignore_mismatched_sizes=True,
-            )
+            # Try to load custom trained model, fall back to pretrained
+            if model_path.exists() and model_path.is_dir():
+                self.model = DetrForObjectDetection.from_pretrained(
+                    str(model_path),
+                    num_labels=len(class_names),
+                    ignore_mismatched_sizes=True,
+                )
+            else:
+                self.model = DetrForObjectDetection.from_pretrained(
+                    "facebook/detr-resnet-50",
+                    num_labels=len(class_names),
+                    ignore_mismatched_sizes=True,
+                )
 
         self.model.to(self.device)
         self.model.eval()

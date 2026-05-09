@@ -14,8 +14,8 @@ This guide covers setting up your development environment, running tests, mainta
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/jethronap/cctv_detection.git
-   cd cctv_detection
+   git clone https://github.com/UNDO-project/UNDO-cctv-detection.git
+   cd UNDO-cctv-detection
    ```
 
 2. **Install dependencies**:

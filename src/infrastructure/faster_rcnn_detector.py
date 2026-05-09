@@ -57,7 +57,7 @@ class FasterRCNNDetector(ObjectDetector):
 
         :return: Faster R-CNN model
         """
-        model = fasterrcnn_resnet50_fpn(weights=None)
+        model = fasterrcnn_resnet50_fpn(weights=None, weights_backbone=None)
         in_features = model.roi_heads.box_predictor.cls_score.in_features
         model.roi_heads.box_predictor = FastRCNNPredictor(in_features, self.num_classes)
         return model

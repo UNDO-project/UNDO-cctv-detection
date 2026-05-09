@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cctv-detection"
-version = "1.0.0"
+version = "1.0.1"
 description = "CCTV camera and signage detection application using custom-trained YOLOv8 model"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -85,11 +85,12 @@ cctv-evaluate-detr = "scripts.evaluate_detr:main"
 cctv-evaluate-faster-rcnn = "scripts.evaluate_faster_rcnn:main"
 cctv-prepare-examples = "scripts.prepare_examples:main"
 cctv-benchmark = "scripts.benchmark_models:main"
+cctv-clean-runs = "scripts.clean_runs:main"
 
 [project.urls]
-Homepage = "https://github.com/jethronap/cctv_detection"
-Repository = "https://github.com/jethronap/cctv_detection"
-Issues = "https://github.com/jethronap/cctv_detection/issues"
+Homepage = "https://github.com/UNDO-project/UNDO-cctv-detection"
+Repository = "https://github.com/UNDO-project/UNDO-cctv-detection"
+Issues = "https://github.com/UNDO-project/UNDO-cctv-detection/issues"
 
 # ============================================================
 # Tool Configurations

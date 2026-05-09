@@ -90,6 +90,12 @@ pytest tests/tools/data_collection/test_camera_image_downloader.py --no-cov
 echo "Done..."
 echo "==============================================="
 
+echo "Running scripts tests"
+echo "----Running clean_runs CLI tests"
+pytest tests/test_clean_runs.py --no-cov
+echo "Done..."
+echo "==============================================="
+
 echo "Running configuration settings tests"
 pytest tests/test_config.py --no-cov
 echo "Done..."

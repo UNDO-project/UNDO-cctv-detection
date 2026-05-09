@@ -13,7 +13,7 @@ A multi-model object detection system for identifying CCTV cameras and signage u
 - 🎯 **Multi-Model Support**: Compare three detection architectures (YOLOv8, Faster R-CNN, DETR)
 - 🎨 **Interactive Web UI**: Gradio-based interface with side-by-side model comparison
 - 📊 **Performance Dashboard**: Training metrics, loss curves, and mAP comparisons
-- 🧪 **Comprehensive Testing**: >65% code coverage with 137+ passing tests
+- 🧪 **Comprehensive Testing**: >65% code coverage with 190+ passing tests
 - ⚙️ **Type-Safe Configuration**: Pydantic v2 settings with environment variable support
 
 ## 🚀 Quick Start
@@ -97,6 +97,7 @@ cctv_detection/
 │   ├── application/        # Use case orchestration
 │   ├── infrastructure/     # Concrete implementations
 │   ├── ui/                 # Gradio web interface
+│   ├── tools/              # Auxiliary tooling (e.g. data collection / scraping)
 │   └── config.py           # Centralized configuration
 ├── scripts/                # Training and utility scripts
 ├── tests/                  # Comprehensive test suite
@@ -136,6 +137,6 @@ If you use this system in research, please cite:
   title={CCTV Detection System},
   author={UNDO Project},
   year={2024},
-  url={https://github.com/jethronap/cctv_detection}
+  url={https://github.com/UNDO-project/UNDO-cctv-detection}
 }
 ```

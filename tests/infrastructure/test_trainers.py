@@ -1,12 +1,14 @@
 """Unit tests for ModelTrainer implementations."""
 
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pytest
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
+from src.config import settings
 from src.infrastructure.trainers import FasterRCNNTrainer, YoloUltralyticsTrainer
 
 
@@ -160,6 +162,74 @@ class TestYoloUltralyticsTrainer:
             mock_train.assert_called_once()
             call_kwargs = mock_train.call_args[1]
             assert call_kwargs["data"] == data_config
+
+    def test_train_cleans_up_incomplete_run_on_abort(
+        self, trainer, data_config, tmp_path
+    ):
+        """Aborting before results.csv is written should remove the new run dir.
+
+        Simulates Ultralytics creating ``runs/detect/trainN/`` (with args.yaml +
+        empty weights/) before epoch 1 completes, then training raising
+        KeyboardInterrupt. The new dir must be cleaned up; pre-existing dirs
+        and dirs that produced ``results.csv`` must be left alone.
+        """
+        # Arrange: simulate runs/detect/ with one pre-existing valid run.
+        detect_root = tmp_path / "runs" / "detect"
+        detect_root.mkdir(parents=True)
+        existing = detect_root / "train_existing"
+        existing.mkdir()
+        (existing / "results.csv").write_text("epoch,loss\n1,0.5\n")
+
+        def fake_train(*args, **kwargs):
+            # Mimic Ultralytics: create the new run dir with args.yaml + weights/
+            # but no results.csv, then raise as if Ctrl-C was pressed.
+            new_run = detect_root / "train_aborted"
+            (new_run / "weights").mkdir(parents=True)
+            (new_run / "args.yaml").write_text("epochs: 1\n")
+            raise KeyboardInterrupt
+
+        fake_settings = SimpleNamespace(
+            paths=SimpleNamespace(project_root=tmp_path),
+            training=settings.training,
+        )
+        with (
+            patch("src.infrastructure.trainers.settings", fake_settings),
+            patch.object(trainer.model, "train", side_effect=fake_train),
+            pytest.raises(KeyboardInterrupt),
+        ):
+            trainer.train(torch.device("cpu"), data_config=data_config)
+
+        # Assert: aborted run was cleaned up; pre-existing run is untouched.
+        assert not (detect_root / "train_aborted").exists()
+        assert (detect_root / "train_existing" / "results.csv").exists()
+
+    def test_train_preserves_completed_run_on_success(
+        self, trainer, data_config, tmp_path
+    ):
+        """A run dir that produced results.csv must never be removed."""
+        detect_root = tmp_path / "runs" / "detect"
+        detect_root.mkdir(parents=True)
+
+        def fake_train(*args, **kwargs):
+            new_run = detect_root / "train_complete"
+            (new_run / "weights").mkdir(parents=True)
+            (new_run / "results.csv").write_text("epoch,loss\n1,0.5\n")
+            # Simulate a post-success failure (e.g. a hook) to exercise the
+            # cleanup path on a successful run dir.
+            raise RuntimeError("simulated post-train hook failure")
+
+        fake_settings = SimpleNamespace(
+            paths=SimpleNamespace(project_root=tmp_path),
+            training=settings.training,
+        )
+        with (
+            patch("src.infrastructure.trainers.settings", fake_settings),
+            patch.object(trainer.model, "train", side_effect=fake_train),
+            pytest.raises(RuntimeError),
+        ):
+            trainer.train(torch.device("cpu"), data_config=data_config)
+
+        assert (detect_root / "train_complete" / "results.csv").exists()
 
 
 class TestFasterRCNNTrainer:

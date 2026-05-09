@@ -265,10 +265,9 @@ class ScraperConfig(BaseModel):
 class Settings(BaseSettings):
     """Main application settings.
 
-    Configuration can be overridden via environment variables with CCTV_ prefix.
-    Nested settings use double underscore delimiter.
+    Configuration can be overridden via environment variables with ``CCTV_``
+    prefix. Nested settings use double underscore delimiter. Examples::
 
-    Examples:
         CCTV_LOG_LEVEL=DEBUG
         CCTV_TRAINING__BATCH_SIZE=8
         CCTV_TRAINING__LEARNING_RATE=0.001

@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 import torch
@@ -63,22 +64,54 @@ class YoloUltralyticsTrainer(ModelTrainer):
 
         # Note: Ultralytics handles device selection internally
         logger.info(f"Training with Ultralytics YOLO on device: {device}")
-        self.model.train(
-            data=config_to_use,
-            epochs=self.epochs,
-            imgsz=self.img_size,
-            batch=settings.training.batch_size,
-            lr0=settings.training.learning_rate,
-            weight_decay=0.001,  # Regularization to mitigate overfitting
-            mosaic=0.8,  # Mosaic augmentation
-            mixup=0.1,  # Mixup augmentation
-            freeze=[
-                0,
-                1,
-                2,
-                3,
-            ],  # Freeze early layers to leverage pretrained features
+
+        # Snapshot existing run dirs so we can identify (and clean up) any new
+        # ones that Ultralytics auto-creates if training aborts before epoch 1
+        # writes results.csv. Without this, Ctrl-C / OOM / dataset errors leave
+        # empty train{N}/ dirs that pollute future MetricsAggregator scans.
+        detect_root = settings.paths.project_root / "runs" / "detect"
+        before = (
+            {p.name for p in detect_root.glob("train*") if p.is_dir()}
+            if detect_root.exists()
+            else set()
         )
+
+        try:
+            self.model.train(
+                data=config_to_use,
+                epochs=self.epochs,
+                imgsz=self.img_size,
+                batch=settings.training.batch_size,
+                lr0=settings.training.learning_rate,
+                weight_decay=0.001,  # Regularization to mitigate overfitting
+                mosaic=0.8,  # Mosaic augmentation
+                mixup=0.1,  # Mixup augmentation
+                freeze=[
+                    0,
+                    1,
+                    2,
+                    3,
+                ],  # Freeze early layers to leverage pretrained features
+            )
+        except (KeyboardInterrupt, Exception):
+            self._cleanup_incomplete_runs(detect_root, before)
+            raise
+
+    @staticmethod
+    def _cleanup_incomplete_runs(detect_root: Path, before: set[str]) -> None:
+        """Remove run dirs created during training that lack results.csv.
+
+        :param detect_root: Path to runs/detect/
+        :param before: Names of train* dirs that existed before training started
+        """
+        if not detect_root.exists():
+            return
+        after = {p.name for p in detect_root.glob("train*") if p.is_dir()}
+        for name in after - before:
+            run_dir = detect_root / name
+            if not (run_dir / "results.csv").exists():
+                shutil.rmtree(run_dir, ignore_errors=True)
+                logger.info(f"Cleaned up incomplete run: {run_dir}")
 
 
 class FasterRCNNTrainer(ModelTrainer):

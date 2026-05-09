@@ -10,12 +10,15 @@ class DeviceSelector:
 
     @staticmethod
     def get_optimal_device() -> torch.device:
-        """
-        Select best available device.
-        Examples:
-            >>> device = DeviceSelector.get_optimal_device()
-            >>> model.to(device)
-        :return: torch.device: The optimal device for training/inference.
+        """Select best available device.
+
+        Example::
+
+            device = DeviceSelector.get_optimal_device()
+            model.to(device)
+
+        :return: The optimal device for training/inference.
+        :rtype: torch.device
         """
         if torch.backends.mps.is_available():
             device = torch.device("mps")
