@@ -13,7 +13,8 @@ from PIL import Image
 class Detection(dict[str, Any]):
     """Detection result containing bounding box, class, and confidence.
 
-    Expected format:
+    Expected format::
+
         {
             'bbox': [x1, y1, x2, y2],  # Absolute pixel coordinates
             'class_id': int,            # Numeric class identifier

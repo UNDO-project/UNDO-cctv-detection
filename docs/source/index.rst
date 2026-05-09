@@ -81,6 +81,7 @@ The project follows a clean layered architecture:
 * **Infrastructure Layer** (``src/infrastructure/``): Concrete implementations
 * **Application Layer** (``src/application/``): Use case orchestration
 * **UI Layer** (``src/ui/``): Gradio web interface
+* **Tools Layer** (``src/tools/``): Auxiliary tooling (e.g. data collection / scraping)
 * **Scripts Layer** (``scripts/``): Command-line utilities
 
 See the :doc:`ARCHITECTURE` guide for detailed information.
@@ -119,6 +120,8 @@ Console Scripts
      - Prepare example images for UI
    * - ``uv run cctv-benchmark``
      - Benchmark inference speed
+   * - ``uv run cctv-clean-runs``
+     - Remove incomplete training run directories (use ``--force`` to delete)
 
 Contributing
 ------------

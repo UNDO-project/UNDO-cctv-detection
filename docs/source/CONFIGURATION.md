@@ -249,7 +249,7 @@ CCTV_TRAINING__LEARNING_RATE=0.0001
 
 All paths are automatically resolved relative to the project root:
 
-```python
+```text
 project_root/
 ├── datasets/              # Training datasets
 │   └── ultralytics/

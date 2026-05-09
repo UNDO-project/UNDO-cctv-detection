@@ -1,5 +1,6 @@
-from enum import Enum
 import math
+from enum import Enum
+
 from src.domain.exceptions import ValidationError
 
 
@@ -11,25 +12,21 @@ class DoriLevel(Enum):
 
 
 class DistanceCalculator:
-    """
-            A domain service that encapsulates calculations related to camera surveillance.
-            It provides methods to compute the maximum distance at which a camera can capture an
-            optimal image based on the DORI standard and field-of-view (FoV) considerations.
+    """Domain service for surveillance camera distance calculations.
 
-    DORI standard (Detection, Observation, Recognition, Identification) and the Focal Length & Field of View (FoV) equation.
-    Determines the maximum distance between the camera lens and the target within which the camera captures an optimal image
-    for a given surveillance purpose.
+    Provides methods to compute the maximum distance at which a camera can
+    capture an optimal image based on the DORI standard (Detection,
+    Observation, Recognition, Identification) and the Focal Length & Field
+    of View (FoV) equation.
 
-    DORI standard (IEC 62676-4):
+    DORI standard (IEC 62676-4)::
 
-    -------------------|-----------------------|----------------------------------------------|
-    Surveillance Level	Pixels per Meter (PPM)	Typical Use Case
-    -------------------|-----------------------|----------------------------------------------|
-    Detection	        25 PPM	                Detecting the presence of a person/vehicle    |
-    Observation	        63 PPM	                Determining behavior and general actions      |
-    Recognition	        125 PPM	                Recognizing a person’s face or license plate  |
-    Identification	    250 PPM	                Confirming identity with high certainty       |
-    -------------------|-----------------------|----------------------------------------------|
+        Surveillance Level    Pixels per Meter    Typical Use Case
+        ------------------    ----------------    --------------------------------------------
+        Detection             25  PPM             Detecting the presence of a person/vehicle
+        Observation           63  PPM             Determining behavior and general actions
+        Recognition           125 PPM             Recognizing a person's face or license plate
+        Identification        250 PPM             Confirming identity with high certainty
     """
 
     @staticmethod
