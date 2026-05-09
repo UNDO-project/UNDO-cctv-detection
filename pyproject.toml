@@ -85,6 +85,7 @@ cctv-evaluate-detr = "scripts.evaluate_detr:main"
 cctv-evaluate-faster-rcnn = "scripts.evaluate_faster_rcnn:main"
 cctv-prepare-examples = "scripts.prepare_examples:main"
 cctv-benchmark = "scripts.benchmark_models:main"
+cctv-clean-runs = "scripts.clean_runs:main"
 
 [project.urls]
 Homepage = "https://github.com/jethronap/cctv_detection"
