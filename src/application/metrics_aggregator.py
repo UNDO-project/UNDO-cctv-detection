@@ -32,7 +32,6 @@ class MetricsAggregator:
         """
         results_csv = run_dir / "results.csv"
         if not results_csv.exists():
-            logger.warning(f"No results.csv in {run_dir}")
             return {}
 
         try:
@@ -65,7 +64,6 @@ class MetricsAggregator:
         # Look for trainer_state.json from HuggingFace Trainer
         trainer_state = run_dir / "trainer_state.json"
         if not trainer_state.exists():
-            logger.warning(f"No trainer_state.json in {run_dir}")
             return {}
 
         try:
@@ -134,7 +132,6 @@ class MetricsAggregator:
         # Look for training_metrics.json or similar
         metrics_file = run_dir / "training_metrics.json"
         if not metrics_file.exists():
-            logger.warning(f"No training_metrics.json in {run_dir}")
             return {}
 
         try:
@@ -170,12 +167,17 @@ class MetricsAggregator:
 
         # Find YOLO runs
         yolo_pattern = "detect/train*"
+        yolo_skipped = 0
         for run_dir in self.runs_dir.glob(yolo_pattern):
             if run_dir.is_dir():
                 metrics = self.load_yolo_metrics(run_dir)
                 if metrics:
                     all_metrics.append(metrics)
                     logger.info(f"Loaded YOLO metrics from {run_dir.name}")
+                else:
+                    yolo_skipped += 1
+        if yolo_skipped:
+            logger.info(f"Skipped {yolo_skipped} YOLO run(s) without results.csv")
 
         # Find DETR runs - use only the latest checkpoint
         detr_pattern = "detr/checkpoint-*"
@@ -193,12 +195,20 @@ class MetricsAggregator:
 
         # Find Faster R-CNN runs
         fasterrcnn_pattern = "faster_rcnn/train*"
+        fasterrcnn_skipped = 0
         for run_dir in self.runs_dir.glob(fasterrcnn_pattern):
             if run_dir.is_dir():
                 metrics = self.load_faster_rcnn_metrics(run_dir)
                 if metrics:
                     all_metrics.append(metrics)
                     logger.info(f"Loaded Faster R-CNN metrics from {run_dir.name}")
+                else:
+                    fasterrcnn_skipped += 1
+        if fasterrcnn_skipped:
+            logger.info(
+                f"Skipped {fasterrcnn_skipped} Faster R-CNN run(s) "
+                f"without training_metrics.json"
+            )
 
         if not all_metrics:
             logger.warning("No training metrics found in runs directory")
