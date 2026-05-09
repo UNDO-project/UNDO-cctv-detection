@@ -159,7 +159,6 @@ class DETRTrainer(ModelTrainer):
             save_strategy="epoch",
             load_best_model_at_end=True,
             metric_for_best_model="eval_loss",
-            logging_dir=str(self.output_dir / "logs"),
             logging_steps=10,
             remove_unused_columns=False,  # Keep all columns
             push_to_hub=False,
@@ -171,7 +170,7 @@ class DETRTrainer(ModelTrainer):
             args=training_args,
             train_dataset=train_loader.dataset,
             eval_dataset=val_loader.dataset,
-            tokenizer=self.processor,  # Used for saving
+            processing_class=self.processor,  # Used for saving
             data_collator=self.collate_fn,  # Custom collator for variable-sized labels
         )
 
