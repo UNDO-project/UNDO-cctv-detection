@@ -137,6 +137,6 @@ If you use this system in research, please cite:
   title={CCTV Detection System},
   author={UNDO Project},
   year={2024},
-  url={https://github.com/jethronap/cctv_detection}
+  url={https://github.com/UNDO-project/UNDO-cctv-detection}
 }
 ```

@@ -88,9 +88,9 @@ cctv-benchmark = "scripts.benchmark_models:main"
 cctv-clean-runs = "scripts.clean_runs:main"
 
 [project.urls]
-Homepage = "https://github.com/jethronap/cctv_detection"
-Repository = "https://github.com/jethronap/cctv_detection"
-Issues = "https://github.com/jethronap/cctv_detection/issues"
+Homepage = "https://github.com/UNDO-project/UNDO-cctv-detection"
+Repository = "https://github.com/UNDO-project/UNDO-cctv-detection"
+Issues = "https://github.com/UNDO-project/UNDO-cctv-detection/issues"
 
 # ============================================================
 # Tool Configurations

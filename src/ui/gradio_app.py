@@ -550,14 +550,14 @@ def create_demo() -> gr.Blocks:
                       title={{CCTV Detection System}},
                       author={{UNDO Project}},
                       year={{2024}},
-                      url={{https://github.com/jethronap/cctv_detection}}
+                      url={{https://github.com/UNDO-project/UNDO-cctv-detection}}
                     }}
                     ```
 
                     ---
 
                     **License:** GNU General Public License v3.0
-                    **Repository:** [GitHub](https://github.com/jethronap/cctv_detection)
+                    **Repository:** [GitHub](https://github.com/UNDO-project/UNDO-cctv-detection)
                     """
                 )
 
