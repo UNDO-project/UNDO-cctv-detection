@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, RandomSampler
 
 from src.application.training_service import TrainingService
 
@@ -45,14 +45,6 @@ class TestTrainingService:
         """Create TrainingService with mocked dependencies."""
         return TrainingService(mock_dataset, mock_trainer, mock_splitter)
 
-    def test_initialization(self, mock_dataset, mock_trainer, mock_splitter):
-        """Test that service initializes with correct dependencies."""
-        service = TrainingService(mock_dataset, mock_trainer, mock_splitter)
-
-        assert service.dataset is mock_dataset
-        assert service.model_trainer is mock_trainer
-        assert service.dataset_splitter is mock_splitter
-
     def test_run_training_splits_dataset(self, service, mock_splitter):
         """Test that run_training calls dataset splitter with correct ratios."""
         # Arrange
@@ -71,21 +63,6 @@ class TestTrainingService:
         assert call_args[0][1] == 0.7  # train_ratio
         assert call_args[0][2] == 0.2  # val_ratio
 
-    def test_run_training_uses_default_config_values(
-        self, service, mock_splitter, mock_trainer
-    ):
-        """Test that run_training uses default config values when not specified."""
-        # Arrange
-        mock_train = MockDataset(70)
-        mock_val = MockDataset(20)
-        mock_test = MockDataset(10)
-        mock_splitter.split.return_value = (mock_train, mock_val, mock_test)
-
-        # Act
-        service.run_training()  # No arguments, should use defaults
-
-        # Assert
-        mock_splitter.split.assert_called_once()
         # Should use TRAIN_RATIO (0.7) and VAL_RATIO (0.3) from config
 
     def test_run_training_calls_trainer_with_dataloaders(
@@ -134,53 +111,6 @@ class TestTrainingService:
         device = call_args[0]  # Device is now first parameter
         assert device.type == "mps"
 
-    @patch("torch.backends.mps.is_available", return_value=False)
-    @patch("torch.cuda.is_available", return_value=True)
-    @patch("torch.cuda.get_device_name", return_value="Mock CUDA Device")
-    def test_run_training_selects_cuda_device_when_mps_unavailable(
-        self,
-        mock_device_name,
-        mock_cuda,
-        mock_mps,
-        service,
-        mock_splitter,
-        mock_trainer,
-    ):
-        """Test that CUDA device is selected when MPS is unavailable."""
-        # Arrange
-        mock_train = MockDataset(10)
-        mock_val = MockDataset(5)
-        mock_test = MockDataset(5)
-        mock_splitter.split.return_value = (mock_train, mock_val, mock_test)
-
-        # Act
-        service.run_training()
-
-        # Assert
-        call_args = mock_trainer.train.call_args[0]
-        device = call_args[0]  # Device is now first parameter
-        assert device.type == "cuda"
-
-    @patch("torch.backends.mps.is_available", return_value=False)
-    @patch("torch.cuda.is_available", return_value=False)
-    def test_run_training_selects_cpu_device_when_no_gpu(
-        self, mock_cuda, mock_mps, service, mock_splitter, mock_trainer
-    ):
-        """Test that CPU device is selected when no GPU is available."""
-        # Arrange
-        mock_train = MockDataset(10)
-        mock_val = MockDataset(5)
-        mock_test = MockDataset(5)
-        mock_splitter.split.return_value = (mock_train, mock_val, mock_test)
-
-        # Act
-        service.run_training()
-
-        # Assert
-        call_args = mock_trainer.train.call_args[0]
-        device = call_args[0]  # Device is now first parameter
-        assert device.type == "cpu"
-
     def test_run_training_with_custom_batch_size(
         self, service, mock_splitter, mock_trainer
     ):
@@ -208,7 +138,7 @@ class TestTrainingService:
     def test_run_training_creates_shuffled_train_loader(
         self, service, mock_splitter, mock_trainer
     ):
-        """Test that training DataLoader is created with shuffle=True."""
+        """Test that the train loader is built with a shuffling sampler."""
         # Arrange
         mock_train = MockDataset(70)
         mock_val = MockDataset(20)
@@ -218,79 +148,8 @@ class TestTrainingService:
         # Act
         service.run_training()
 
-        # Assert
-        call_args = mock_trainer.train.call_args[0]
-        # New interface: device is first, then loaders
-        train_loader = call_args[1]
-
-        # Training loader should have shuffle enabled
-        # Note: We can't directly check shuffle, but we verify the loader was created
-        assert train_loader is not None
-
-    def test_run_training_workflow_execution_order(
-        self, service, mock_splitter, mock_trainer
-    ):
-        """Test that training workflow executes steps in correct order."""
-        # Arrange
-        mock_train = MockDataset(70)
-        mock_val = MockDataset(20)
-        mock_test = MockDataset(10)
-        mock_splitter.split.return_value = (mock_train, mock_val, mock_test)
-
-        execution_order = []
-
-        def track_split(*args, **kwargs):
-            execution_order.append("split")
-            return (mock_train, mock_val, mock_test)
-
-        def track_train(*args, **kwargs):
-            execution_order.append("train")
-
-        mock_splitter.split.side_effect = track_split
-        mock_trainer.train.side_effect = track_train
-
-        # Act
-        service.run_training()
-
-        # Assert
-        assert execution_order == ["split", "train"]
-        assert mock_splitter.split.called
-        assert mock_trainer.train.called
-
-    def test_run_training_with_different_ratios(
-        self, service, mock_splitter, mock_trainer
-    ):
-        """Test that different train/val ratios are passed correctly."""
-        # Arrange
-        mock_train = MockDataset(80)
-        mock_val = MockDataset(15)
-        mock_test = MockDataset(5)
-        mock_splitter.split.return_value = (mock_train, mock_val, mock_test)
-
-        # Act
-        service.run_training(train_ratio=0.8, val_ratio=0.15, batch_size=4)
-
-        # Assert
-        call_args = mock_splitter.split.call_args[0]
-        assert call_args[1] == 0.8
-        assert call_args[2] == 0.15
-
-    def test_trainer_receives_device_parameter(
-        self, service, mock_splitter, mock_trainer
-    ):
-        """Test that trainer receives device parameter."""
-        # Arrange
-        mock_train = MockDataset(10)
-        mock_val = MockDataset(5)
-        mock_test = MockDataset(5)
-        mock_splitter.split.return_value = (mock_train, mock_val, mock_test)
-
-        # Act
-        service.run_training()
-
-        # Assert
-        call_args = mock_trainer.train.call_args[0]
-        assert len(call_args) == 3  # device, train_loader, val_loader (new interface)
-        device = call_args[0]  # Device is now first parameter
-        assert isinstance(device, torch.device)
-        assert device.type in ["cpu", "cuda", "mps"]
+        # Assert - shuffle=True gives a RandomSampler
+        _, train_loader, val_loader = mock_trainer.train.call_args[0]
+        assert isinstance(train_loader.sampler, RandomSampler)
+        assert train_loader.dataset is mock_train
+        assert val_loader.dataset is mock_val

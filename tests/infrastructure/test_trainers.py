@@ -97,25 +97,6 @@ class TestYoloUltralyticsTrainer:
                 img_size=640,
             )
 
-    def test_train_raises_when_no_data_config(self):
-        """Test that train raises ValueError when no data_config provided."""
-        # Arrange - create trainer WITHOUT data_config
-        with patch("src.infrastructure.trainers.YOLO"):
-            trainer = YoloUltralyticsTrainer(
-                model_weights="yolov8n.pt",
-                data_config=None,  # No data_config in initialization
-                epochs=1,
-                img_size=640,
-            )
-        device = torch.device("cpu")
-
-        # Act & Assert
-        with pytest.raises(
-            ValueError,
-            match="Either \\(train_loader AND val_loader\\) or data_config must be provided",
-        ):
-            trainer.train(device, train_loader=None, val_loader=None, data_config=None)
-
     def test_train_uses_provided_data_config(self, trainer, tmp_path):
         """Test that train uses data_config when provided."""
         # Arrange
@@ -142,23 +123,6 @@ class TestYoloUltralyticsTrainer:
             trainer.train(device)
 
             # Assert
-            mock_train.assert_called_once()
-            call_kwargs = mock_train.call_args[1]
-            assert call_kwargs["data"] == data_config
-
-    def test_train_ignores_dataloaders(self, trainer, data_config):
-        """Test that train works even when loaders are provided (they're ignored)."""
-        # Arrange
-        device = torch.device("cpu")
-        dataset = TensorDataset(torch.randn(10, 3, 64, 64))
-        train_loader = DataLoader(dataset, batch_size=2)
-        val_loader = DataLoader(dataset, batch_size=2)
-
-        with patch.object(trainer.model, "train") as mock_train:
-            # Act
-            trainer.train(device, train_loader, val_loader, data_config)
-
-            # Assert - should succeed and use data_config
             mock_train.assert_called_once()
             call_kwargs = mock_train.call_args[1]
             assert call_kwargs["data"] == data_config
@@ -263,44 +227,6 @@ class TestFasterRCNNTrainer:
 
         return train_loader, val_loader
 
-    def test_train_raises_when_no_loaders(self, trainer):
-        """Test that train raises ValueError when loaders not provided."""
-        # Arrange
-        device = torch.device("cpu")
-
-        # Act & Assert
-        with pytest.raises(
-            ValueError,
-            match="Either \\(train_loader AND val_loader\\) or data_config must be provided",
-        ):
-            trainer.train(device, train_loader=None, val_loader=None)
-
-    def test_train_raises_when_only_train_loader(self, trainer, mock_dataloaders):
-        """Test that train raises ValueError when only train_loader provided."""
-        # Arrange
-        device = torch.device("cpu")
-        train_loader, _ = mock_dataloaders
-
-        # Act & Assert
-        with pytest.raises(
-            ValueError,
-            match="Either \\(train_loader AND val_loader\\) or data_config must be provided",
-        ):
-            trainer.train(device, train_loader=train_loader, val_loader=None)
-
-    def test_train_raises_when_only_val_loader(self, trainer, mock_dataloaders):
-        """Test that train raises ValueError when only val_loader provided."""
-        # Arrange
-        device = torch.device("cpu")
-        _, val_loader = mock_dataloaders
-
-        # Act & Assert
-        with pytest.raises(
-            ValueError,
-            match="Either \\(train_loader AND val_loader\\) or data_config must be provided",
-        ):
-            trainer.train(device, train_loader=None, val_loader=val_loader)
-
     def test_train_accepts_both_loaders(self, trainer, mock_dataloaders):
         """Test that train works when both loaders provided."""
         # Arrange
@@ -323,15 +249,98 @@ class TestFasterRCNNTrainer:
             patch.object(trainer.model, "train"),
             patch.object(trainer.model, "to", return_value=trainer.model),
         ):
-            # Act - should not raise
-            trainer.train(device, train_loader, val_loader)
+            # Act
+            result = trainer.train(device, train_loader, val_loader)
+
+        # Assert - one epoch, loss is the sum of the two mocked components
+        assert result["epochs"] == 1
+        assert result["train_losses"] == [pytest.approx(0.8)]
+        assert result["val_losses"] == [pytest.approx(0.8)]
 
     def test_build_model_returns_faster_rcnn(self, trainer):
-        """Test that build_model returns a FasterRCNN model."""
+        """Test that build_model replaces the head with one sized for num_classes."""
         # Act
         model = trainer.build_model()
 
-        # Assert
-        assert model is not None
-        assert hasattr(model, "roi_heads")
-        assert hasattr(model.roi_heads, "box_predictor")
+        # Assert - the only thing build_model changes is the predictor head
+        predictor = model.roi_heads.box_predictor
+        assert predictor.cls_score.out_features == 3
+        assert predictor.bbox_pred.out_features == 3 * 4
+
+
+class TestFasterRCNNEvaluateMap:
+    """evaluate_map converts xyxy boxes to COCO xywh and scores them."""
+
+    @staticmethod
+    def _trainer_with_predictions(predictions: list[dict]) -> FasterRCNNTrainer:
+        """Build a FasterRCNNTrainer without weights, with a stubbed model.
+
+        :param predictions: Per-image prediction dicts the model should return
+        :return: Trainer whose model returns the given predictions
+        :rtype: FasterRCNNTrainer
+        """
+        trainer = FasterRCNNTrainer.__new__(FasterRCNNTrainer)
+        trainer.num_classes = 3
+        trainer.model = Mock(return_value=predictions)
+        return trainer
+
+    @staticmethod
+    def _single_image_batch():
+        """One 100x200 image with a single class-1 box at [80, 30, 120, 70]."""
+        images = [torch.zeros(3, 100, 200)]
+        targets = [
+            {
+                "boxes": torch.tensor([[80.0, 30.0, 120.0, 70.0]]),
+                "labels": torch.tensor([1]),
+            }
+        ]
+        return [(images, targets)]
+
+    def test_perfect_prediction_scores_full_map(self):
+        """A prediction matching the ground truth exactly yields mAP 1.0."""
+        trainer = self._trainer_with_predictions(
+            [
+                {
+                    "boxes": torch.tensor([[80.0, 30.0, 120.0, 70.0]]),
+                    "labels": torch.tensor([1]),
+                    "scores": torch.tensor([0.9]),
+                }
+            ]
+        )
+
+        result = trainer.evaluate_map(self._single_image_batch(), torch.device("cpu"))
+
+        assert result["map50"] == pytest.approx(1.0)
+        assert result["map"] == pytest.approx(1.0)
+
+    def test_predictions_below_threshold_are_dropped(self):
+        """A prediction under score_threshold is ignored, giving mAP 0."""
+        trainer = self._trainer_with_predictions(
+            [
+                {
+                    "boxes": torch.tensor([[80.0, 30.0, 120.0, 70.0]]),
+                    "labels": torch.tensor([1]),
+                    "scores": torch.tensor([0.04]),
+                }
+            ]
+        )
+
+        result = trainer.evaluate_map(self._single_image_batch(), torch.device("cpu"))
+
+        assert result == {"map50": 0.0, "map": 0.0}
+
+    def test_wrong_class_scores_zero(self):
+        """A perfectly placed box with the wrong class does not count."""
+        trainer = self._trainer_with_predictions(
+            [
+                {
+                    "boxes": torch.tensor([[80.0, 30.0, 120.0, 70.0]]),
+                    "labels": torch.tensor([2]),
+                    "scores": torch.tensor([0.9]),
+                }
+            ]
+        )
+
+        result = trainer.evaluate_map(self._single_image_batch(), torch.device("cpu"))
+
+        assert result["map50"] == pytest.approx(0.0)

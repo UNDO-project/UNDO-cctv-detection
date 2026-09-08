@@ -42,15 +42,6 @@ class TestYOLODetector:
     """Test cases for YOLODetector class."""
 
     @patch("src.infrastructure.yolo_detector.YOLO")
-    def test_initialization(self, mock_yolo, tmp_path: Path, class_names: list[str]):
-        """Test that YOLO detector initializes correctly."""
-        model_path = tmp_path / "yolo_model.pt"
-        detector = YOLODetector(model_path, class_names)
-
-        assert detector.class_names == class_names
-        mock_yolo.assert_called_once_with(str(model_path))
-
-    @patch("src.infrastructure.yolo_detector.YOLO")
     def test_predict(
         self,
         mock_yolo,
@@ -92,11 +83,10 @@ class TestYOLODetector:
         class_names: list[str],
         sample_image: Image.Image,
     ):
-        """Test YOLO annotate_image returns PIL Image."""
+        """Test YOLO annotate_image returns Ultralytics' plotted frame as an image."""
+        plotted = np.random.randint(0, 255, (480, 320, 3), dtype=np.uint8)
         mock_result = MagicMock()
-        mock_result.plot.return_value = np.random.randint(
-            0, 255, (640, 640, 3), dtype=np.uint8
-        )
+        mock_result.plot.return_value = plotted
 
         mock_yolo_instance = MagicMock()
         mock_yolo_instance.predict.return_value = [mock_result]
@@ -104,10 +94,12 @@ class TestYOLODetector:
 
         model_path = tmp_path / "yolo_model.pt"
         detector = YOLODetector(model_path, class_names)
-        annotated = detector.annotate_image(sample_image, confidence_threshold=0.25)
+        annotated = detector.annotate_image(sample_image, confidence_threshold=0.4)
 
         assert isinstance(annotated, Image.Image)
-        mock_yolo_instance.predict.assert_called_once()
+        assert annotated.size == (320, 480)
+        assert np.array_equal(np.array(annotated), plotted)
+        assert mock_yolo_instance.predict.call_args.kwargs["conf"] == 0.4
 
 
 class TestDETRDetector:
@@ -188,15 +180,14 @@ class TestDETRDetector:
         class_names: list[str],
         sample_image: Image.Image,
     ):
-        """Test DETR annotate_image returns PIL Image."""
-        # Setup mocks to return empty detections
+        """Test DETR annotate_image draws the detection box on a copy."""
         mock_processor = MagicMock()
         mock_processor.return_value = {"pixel_values": torch.randn(1, 3, 800, 800)}
         mock_processor.post_process_object_detection.return_value = [
             {
-                "scores": torch.tensor([]),
-                "labels": torch.tensor([]),
-                "boxes": torch.tensor([]),
+                "scores": torch.tensor([0.9]),
+                "labels": torch.tensor([0]),
+                "boxes": torch.tensor([[10.0, 10.0, 100.0, 100.0]]),
             }
         ]
         mock_processor_class.from_pretrained.return_value = mock_processor
@@ -208,9 +199,16 @@ class TestDETRDetector:
         model_path = tmp_path / "detr_model"
         model_path.mkdir()
         detector = DETRDetector(model_path, class_names, device=torch.device("cpu"))
-        annotated = detector.annotate_image(sample_image, confidence_threshold=0.7)
+        black = Image.new("RGB", (200, 200))
+
+        annotated = detector.annotate_image(black, confidence_threshold=0.7)
 
         assert isinstance(annotated, Image.Image)
+        assert annotated is not black
+        # Left edge of the box is drawn in red; the source image is untouched
+        assert annotated.getpixel((10, 50)) == (255, 0, 0)
+        assert annotated.getpixel((150, 150)) == (0, 0, 0)
+        assert black.getpixel((10, 50)) == (0, 0, 0)
 
 
 class TestFasterRCNNDetector:
@@ -274,14 +272,13 @@ class TestFasterRCNNDetector:
         class_names: list[str],
         sample_image: Image.Image,
     ):
-        """Test Faster R-CNN annotate_image returns PIL Image."""
-        # Setup mock model with no detections
+        """Test Faster R-CNN annotate_image draws the detection box on a copy."""
         mock_model = MagicMock()
         mock_model.return_value = [
             {
-                "boxes": torch.tensor([]),
-                "labels": torch.tensor([]),
-                "scores": torch.tensor([]),
+                "boxes": torch.tensor([[10.0, 10.0, 100.0, 100.0]]),
+                "labels": torch.tensor([1]),
+                "scores": torch.tensor([0.9]),
             }
         ]
         mock_fasterrcnn.return_value = mock_model
@@ -290,9 +287,16 @@ class TestFasterRCNNDetector:
         detector = FasterRCNNDetector(
             model_path, class_names, device=torch.device("cpu")
         )
-        annotated = detector.annotate_image(sample_image, confidence_threshold=0.25)
+        black = Image.new("RGB", (200, 200))
+
+        annotated = detector.annotate_image(black, confidence_threshold=0.25)
 
         assert isinstance(annotated, Image.Image)
+        assert annotated is not black
+        # Left edge of the box is drawn in green; the source image is untouched
+        assert annotated.getpixel((10, 50)) == (0, 128, 0)
+        assert annotated.getpixel((150, 150)) == (0, 0, 0)
+        assert black.getpixel((10, 50)) == (0, 0, 0)
 
 
 class TestDetectorFactory:
@@ -355,16 +359,161 @@ class TestDetectorFactory:
                 device=torch.device("cpu"),
             )
 
-    @patch("src.infrastructure.yolo_detector.YOLO")
+    @patch("src.infrastructure.faster_rcnn_detector.fasterrcnn_resnet50_fpn")
     def test_uses_cpu_by_default(
-        self, mock_yolo, tmp_path: Path, class_names: list[str]
+        self, mock_fasterrcnn, tmp_path: Path, class_names: list[str]
     ):
         """Test factory defaults to CPU device when device is None."""
-        model_path = tmp_path / "yolo_model.pt"
+        model_path = tmp_path / "fasterrcnn_model.pt"
         detector = DetectorFactory.create_detector(
-            model_type="yolo",
+            model_type="faster-rcnn",
             model_path=model_path,
             class_names=class_names,
             device=None,
         )
-        assert isinstance(detector, YOLODetector)
+        assert detector.device == torch.device("cpu")
+
+
+class TestFasterRCNNDetectorFiltering:
+    """Faster R-CNN predict drops low scores and out-of-range labels."""
+
+    @patch("src.infrastructure.faster_rcnn_detector.fasterrcnn_resnet50_fpn")
+    def test_predict_filters_by_score_and_label_range(
+        self,
+        mock_fasterrcnn,
+        tmp_path: Path,
+        class_names: list[str],
+        sample_image: Image.Image,
+    ):
+        """Only detections above threshold with a valid foreground label survive."""
+        mock_model = MagicMock()
+        mock_model.return_value = [
+            {
+                "boxes": torch.tensor(
+                    [
+                        [10.0, 20.0, 100.0, 200.0],  # kept: label 1 -> CCTV
+                        [50.0, 60.0, 150.0, 250.0],  # dropped: score below threshold
+                        [0.0, 0.0, 10.0, 10.0],  # dropped: label 0 is background
+                        [5.0, 5.0, 15.0, 15.0],  # dropped: label 3 has no class name
+                    ]
+                ),
+                "labels": torch.tensor([1, 2, 0, 3]),
+                "scores": torch.tensor([0.9, 0.1, 0.95, 0.95]),
+            }
+        ]
+        mock_fasterrcnn.return_value = mock_model
+        detector = FasterRCNNDetector(
+            tmp_path / "fasterrcnn_model.pt", class_names, device=torch.device("cpu")
+        )
+
+        detections = detector.predict(sample_image, confidence_threshold=0.25)
+
+        assert len(detections) == 1
+        assert detections[0]["class_name"] == "CCTV"
+        assert detections[0]["bbox"] == [10.0, 20.0, 100.0, 200.0]
+        assert detections[0]["confidence"] == pytest.approx(0.9)
+
+    @patch("src.infrastructure.faster_rcnn_detector.fasterrcnn_resnet50_fpn")
+    def test_predict_threshold_is_inclusive(
+        self,
+        mock_fasterrcnn,
+        tmp_path: Path,
+        class_names: list[str],
+        sample_image: Image.Image,
+    ):
+        """A score exactly equal to the threshold is kept."""
+        mock_model = MagicMock()
+        mock_model.return_value = [
+            {
+                "boxes": torch.tensor([[10.0, 20.0, 100.0, 200.0]]),
+                "labels": torch.tensor([2]),
+                "scores": torch.tensor([0.5]),
+            }
+        ]
+        mock_fasterrcnn.return_value = mock_model
+        detector = FasterRCNNDetector(
+            tmp_path / "fasterrcnn_model.pt", class_names, device=torch.device("cpu")
+        )
+
+        detections = detector.predict(sample_image, confidence_threshold=0.5)
+
+        assert len(detections) == 1
+        assert detections[0]["class_name"] == "CCTV-SIGNS"
+
+
+class TestDETRDetectorNMS:
+    """DETR predict removes overlapping boxes via NMS."""
+
+    @patch("src.infrastructure.detr_detector.DetrForObjectDetection")
+    @patch("src.infrastructure.detr_detector.DetrImageProcessor")
+    def test_predict_suppresses_overlapping_boxes(
+        self,
+        mock_processor_class,
+        mock_model_class,
+        tmp_path: Path,
+        class_names: list[str],
+        sample_image: Image.Image,
+    ):
+        """Of two boxes with IoU above 0.5, only the higher-scoring one is kept."""
+        mock_processor = MagicMock()
+        mock_processor.return_value = {"pixel_values": torch.randn(1, 3, 800, 800)}
+        mock_processor.post_process_object_detection.return_value = [
+            {
+                "scores": torch.tensor([0.9, 0.8, 0.7]),
+                "labels": torch.tensor([0, 0, 1]),
+                "boxes": torch.tensor(
+                    [
+                        [10.0, 10.0, 100.0, 100.0],  # kept
+                        [12.0, 12.0, 102.0, 102.0],  # suppressed: overlaps the first
+                        [300.0, 300.0, 400.0, 400.0],  # kept: no overlap
+                    ]
+                ),
+            }
+        ]
+        mock_processor_class.from_pretrained.return_value = mock_processor
+        mock_model_class.from_pretrained.return_value = MagicMock(
+            return_value={"logits": torch.randn(1, 100, 3)}
+        )
+        model_path = tmp_path / "detr_model"
+        model_path.mkdir()
+        detector = DETRDetector(model_path, class_names, device=torch.device("cpu"))
+
+        detections = detector.predict(sample_image, confidence_threshold=0.7)
+
+        assert [d["confidence"] for d in detections] == pytest.approx([0.9, 0.7])
+        assert [d["class_name"] for d in detections] == ["CCTV", "CCTV-SIGNS"]
+        assert detections[0]["bbox"] == [10.0, 10.0, 100.0, 100.0]
+
+    @patch("src.infrastructure.detr_detector.DetrForObjectDetection")
+    @patch("src.infrastructure.detr_detector.DetrImageProcessor")
+    def test_predict_passes_threshold_and_image_size_to_post_processing(
+        self,
+        mock_processor_class,
+        mock_model_class,
+        tmp_path: Path,
+        class_names: list[str],
+        sample_image: Image.Image,
+    ):
+        """Confidence threshold and (height, width) reach the processor."""
+        mock_processor = MagicMock()
+        mock_processor.return_value = {"pixel_values": torch.randn(1, 3, 800, 800)}
+        mock_processor.post_process_object_detection.return_value = [
+            {
+                "scores": torch.tensor([]),
+                "labels": torch.tensor([]),
+                "boxes": torch.zeros(0, 4),
+            }
+        ]
+        mock_processor_class.from_pretrained.return_value = mock_processor
+        mock_model_class.from_pretrained.return_value = MagicMock(return_value={})
+        model_path = tmp_path / "detr_model"
+        model_path.mkdir()
+        detector = DETRDetector(model_path, class_names, device=torch.device("cpu"))
+        wide_image = Image.new("RGB", (320, 240))
+
+        detections = detector.predict(wide_image, confidence_threshold=0.6)
+
+        assert detections == []
+        kwargs = mock_processor.post_process_object_detection.call_args.kwargs
+        assert kwargs["threshold"] == 0.6
+        assert kwargs["target_sizes"].tolist() == [[240, 320]]
