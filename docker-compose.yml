@@ -1,0 +1,20 @@
+services:
+  cctv-detection:
+    build: .
+    image: cctv-detection:latest
+    ports:
+      - "7860:7860"
+    volumes:
+      # YOLO and Faster R-CNN weights (samples/best.pt, samples/fasterrcnn_best.pt)
+      - ./samples:/app/samples:ro
+      # DETR weights (runs/detr/final) and the training runs read by the dashboard tab
+      - ./runs:/app/runs:ro
+      # Example images shown in the UI gallery
+      - ./examples:/app/examples:ro
+      # HuggingFace hub cache so the DETR processor config is fetched once
+      - hf-cache:/hf-cache
+    environment:
+      - CCTV_LOG_LEVEL=INFO
+
+volumes:
+  hf-cache:
