@@ -35,14 +35,19 @@ uv run pre-commit install
 
 ### 📦 Download Model Weights
 
-Place trained model weights in the `samples/` directory:
+Place trained model weights where the application expects them by default:
 
 ```
 samples/
 ├── best.pt              # YOLOv8 weights
-├── fasterrcnn_best.pt   # Faster R-CNN weights
-└── detr_best.pt         # DETR weights
+└── fasterrcnn_best.pt   # Faster R-CNN weights
+runs/
+└── detr/
+    └── final/           # DETR weights (HuggingFace directory format)
 ```
+
+Paths can be overridden with `CCTV_MODELS__YOLO_WEIGHTS`,
+`CCTV_MODELS__FASTER_RCNN_WEIGHTS` and `CCTV_MODELS__DETR_WEIGHTS`.
 
 Or train models from scratch (see [Training Guide](docs/source/TRAINING.md)).
 
@@ -59,6 +64,42 @@ uv run cctv-ui
 ```
 
 Visit `http://127.0.0.1:7860` in your browser.
+
+### 🐳 Run with Docker
+
+A CPU-only image is provided for running the UI without a local Python setup.
+Weights, training runs and example images stay on the host and are mounted
+read-only, so the image contains only code and dependencies.
+
+```bash
+# Build the image and start the UI
+docker compose up --build
+
+# Subsequent starts (no rebuild)
+docker compose up
+```
+
+Visit `http://localhost:7860` in your browser.
+
+The compose file mounts three host directories into the container:
+
+| Host path    | Used for                                                          |
+|--------------|-------------------------------------------------------------------|
+| `samples/`   | YOLOv8 (`best.pt`) and Faster R-CNN (`fasterrcnn_best.pt`) weights |
+| `runs/`      | DETR weights (`runs/detr/final`) and the Performance Dashboard tab |
+| `examples/`  | Images shown in the example gallery                                |
+
+Notes:
+- Inference runs on CPU inside the container. YOLOv8 and DETR are quick;
+  Faster R-CNN takes several seconds per image.
+- On Linux, `torch` resolves to the CPU wheel index declared in
+  `pyproject.toml`, which keeps the image around 2.5 GB. macOS and Windows
+  installs are unaffected.
+- The first start downloads the DETR image-processor config from the
+  HuggingFace Hub into a named volume (`hf-cache`); later starts are offline.
+- Point at different weights with the usual environment overrides, e.g.
+  `CCTV_MODELS__YOLO_WEIGHTS=/app/samples/other.pt`, either in
+  `docker-compose.yml` or on the command line with `docker compose run -e`.
 
 ## 📚 Documentation
 
