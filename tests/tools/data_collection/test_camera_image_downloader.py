@@ -4,12 +4,13 @@ This module tests the CameraImageDownloader which orchestrates downloading
 camera images by loading CSV data and scraping images from URLs.
 """
 
-import pytest
-from unittest.mock import Mock
 from pathlib import Path
+from unittest.mock import Mock
 
-from tools.data_collection.camera_image_downloader import CameraImageDownloader
+import pytest
+
 from src.domain.camera import CameraDataFromCsv
+from src.tools.data_collection.camera_image_downloader import CameraImageDownloader
 
 
 class TestCameraImageDownloader:
