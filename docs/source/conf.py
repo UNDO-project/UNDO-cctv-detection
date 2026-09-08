@@ -8,13 +8,17 @@
 
 import os
 import sys
+import tomllib
 
 sys.path.insert(0, os.path.abspath("../.."))
 
 project = "UNDO | CCTV-detection"
 copyright = "2025, jethronap"
 author = "jethronap"
-release = "1.0.0"
+with open(
+    os.path.join(os.path.dirname(__file__), "..", "..", "pyproject.toml"), "rb"
+) as f:
+    release = tomllib.load(f)["project"]["version"]
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

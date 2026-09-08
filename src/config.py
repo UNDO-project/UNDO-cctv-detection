@@ -4,6 +4,7 @@ This module provides type-safe, validated configuration management with
 environment variable support and clear separation of concerns.
 """
 
+import tomllib
 from pathlib import Path
 from typing import Literal
 
@@ -308,3 +309,21 @@ class Settings(BaseSettings):
 
 # Global settings instance - singleton pattern
 settings = Settings()
+
+
+def get_project_version() -> str:
+    """Read the project version from pyproject.toml.
+
+    Reading the file rather than package metadata keeps the value correct
+    when the project is run from source without being installed (for
+    example inside the Docker image).
+
+    :return: Version string, or "unknown" if pyproject.toml cannot be read
+    :rtype: str
+    """
+    pyproject = settings.paths.project_root / "pyproject.toml"
+    try:
+        with open(pyproject, "rb") as f:
+            return str(tomllib.load(f)["project"]["version"])
+    except (OSError, KeyError, tomllib.TOMLDecodeError):
+        return "unknown"

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cctv-detection"
-version = "1.0.1"
+version = "1.0.4"
 description = "CCTV camera and signage detection application using custom-trained YOLOv8 model"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -103,6 +103,18 @@ exclude = ["src.tools*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.yaml", "*.yml", "*.json"]
+
+# Linux resolves torch to the CUDA build by default, which pulls in 70+ NVIDIA
+# packages and makes the Docker image 6-8 GB. The container is CPU-only, so pin
+# torch/torchvision to the CPU wheel index on Linux. macOS is unaffected.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+torchvision = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 
 [tool.ruff]
 # Python version target

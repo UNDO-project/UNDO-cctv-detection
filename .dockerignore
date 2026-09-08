@@ -1,0 +1,26 @@
+# VCS and local tooling
+.git
+.github
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.coverage
+htmlcov
+.ruff_cache
+.mypy_cache
+.env
+
+# Bind-mounted at runtime; excluding them keeps the build context small
+datasets
+runs
+samples
+examples
+mydata
+
+# Not needed inside the image
+tests
+docs
+Dockerfile
+docker-compose.yml
