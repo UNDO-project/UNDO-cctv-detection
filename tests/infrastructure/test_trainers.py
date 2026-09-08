@@ -335,3 +335,81 @@ class TestFasterRCNNTrainer:
         assert model is not None
         assert hasattr(model, "roi_heads")
         assert hasattr(model.roi_heads, "box_predictor")
+
+
+class TestFasterRCNNEvaluateMap:
+    """evaluate_map converts xyxy boxes to COCO xywh and scores them."""
+
+    @staticmethod
+    def _trainer_with_predictions(predictions: list[dict]) -> FasterRCNNTrainer:
+        """Build a FasterRCNNTrainer without weights, with a stubbed model.
+
+        :param predictions: Per-image prediction dicts the model should return
+        :return: Trainer whose model returns the given predictions
+        :rtype: FasterRCNNTrainer
+        """
+        trainer = FasterRCNNTrainer.__new__(FasterRCNNTrainer)
+        trainer.num_classes = 3
+        trainer.model = Mock(return_value=predictions)
+        return trainer
+
+    @staticmethod
+    def _single_image_batch():
+        """One 100x200 image with a single class-1 box at [80, 30, 120, 70]."""
+        images = [torch.zeros(3, 100, 200)]
+        targets = [
+            {
+                "boxes": torch.tensor([[80.0, 30.0, 120.0, 70.0]]),
+                "labels": torch.tensor([1]),
+            }
+        ]
+        return [(images, targets)]
+
+    def test_perfect_prediction_scores_full_map(self):
+        """A prediction matching the ground truth exactly yields mAP 1.0."""
+        trainer = self._trainer_with_predictions(
+            [
+                {
+                    "boxes": torch.tensor([[80.0, 30.0, 120.0, 70.0]]),
+                    "labels": torch.tensor([1]),
+                    "scores": torch.tensor([0.9]),
+                }
+            ]
+        )
+
+        result = trainer.evaluate_map(self._single_image_batch(), torch.device("cpu"))
+
+        assert result["map50"] == pytest.approx(1.0)
+        assert result["map"] == pytest.approx(1.0)
+
+    def test_predictions_below_threshold_are_dropped(self):
+        """A prediction under score_threshold is ignored, giving mAP 0."""
+        trainer = self._trainer_with_predictions(
+            [
+                {
+                    "boxes": torch.tensor([[80.0, 30.0, 120.0, 70.0]]),
+                    "labels": torch.tensor([1]),
+                    "scores": torch.tensor([0.04]),
+                }
+            ]
+        )
+
+        result = trainer.evaluate_map(self._single_image_batch(), torch.device("cpu"))
+
+        assert result == {"map50": 0.0, "map": 0.0}
+
+    def test_wrong_class_scores_zero(self):
+        """A perfectly placed box with the wrong class does not count."""
+        trainer = self._trainer_with_predictions(
+            [
+                {
+                    "boxes": torch.tensor([[80.0, 30.0, 120.0, 70.0]]),
+                    "labels": torch.tensor([2]),
+                    "scores": torch.tensor([0.9]),
+                }
+            ]
+        )
+
+        result = trainer.evaluate_map(self._single_image_batch(), torch.device("cpu"))
+
+        assert result["map50"] == pytest.approx(0.0)

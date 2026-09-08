@@ -17,6 +17,11 @@ pytest tests/application/test_surveillance_service.py --no-cov
 echo "Done..."
 echo "==============================================="
 
+echo "----Running metrics aggregator tests"
+pytest tests/application/test_metrics_aggregator.py --no-cov
+echo "Done..."
+echo "==============================================="
+
 echo "----Running training service tests"
 pytest tests/application/test_training_service.py --no-cov
 echo "Done..."

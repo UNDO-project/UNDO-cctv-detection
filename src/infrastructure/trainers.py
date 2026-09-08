@@ -264,7 +264,7 @@ class FasterRCNNTrainer(ModelTrainer):
         }
         coco_predictions = []
 
-        annotation_id = 0
+        annotation_id = 1  # pycocotools treats a matched GT id of 0 as "unmatched"
         image_id = 0
 
         with torch.no_grad():

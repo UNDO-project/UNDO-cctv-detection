@@ -1,7 +1,10 @@
 """Unit tests for DistanceCalculator domain service."""
 
-import pytest
 import math
+
+import pytest
+
+from src.domain.exceptions import ValidationError
 from src.domain.services.distance_calculator import DistanceCalculator, DoriLevel
 
 
@@ -225,3 +228,52 @@ class TestDistanceCalculatorIntegration:
         # Both should give reasonable surveillance distances (5-20m typically)
         assert 5.0 < dori_distance < 20.0
         assert 1.0 < fov_distance < 10.0
+
+
+class TestInputValidation:
+    """Test that invalid inputs are rejected with ValidationError."""
+
+    @pytest.mark.parametrize(
+        ("sensor_height_px", "target_height_m", "ppm", "field"),
+        [
+            (0, 1.7, 125, "sensor_height_px"),
+            (-1080, 1.7, 125, "sensor_height_px"),
+            (1080, 0.0, 125, "target_height_m"),
+            (1080, -1.7, 125, "target_height_m"),
+            (1080, 1.7, 0, "ppm"),
+            (1080, 1.7, -25, "ppm"),
+        ],
+    )
+    def test_dori_rejects_non_positive_inputs(
+        self, sensor_height_px, target_height_m, ppm, field
+    ):
+        """Each DORI argument must be strictly positive; the message names the field."""
+        with pytest.raises(ValidationError, match=field):
+            DistanceCalculator.calculate_max_distance_dori(
+                sensor_height_px=sensor_height_px,
+                target_height_m=target_height_m,
+                ppm=ppm,
+            )
+
+    @pytest.mark.parametrize(
+        ("target_width_m", "hfov_deg", "field"),
+        [
+            (0.0, 90.0, "target_width_m"),
+            (-1.0, 90.0, "target_width_m"),
+            (1.0, 0.0, "hfov_deg"),
+            (1.0, -10.0, "hfov_deg"),
+            (1.0, 180.0, "hfov_deg"),
+            (1.0, 200.0, "hfov_deg"),
+        ],
+    )
+    def test_fov_rejects_out_of_range_inputs(self, target_width_m, hfov_deg, field):
+        """Width must be positive and the FOV strictly inside (0, 180) degrees."""
+        with pytest.raises(ValidationError, match=field):
+            DistanceCalculator.calculate_distance_fov(
+                target_width_m=target_width_m, hfov_deg=hfov_deg
+            )
+
+    def test_fov_accepts_boundary_neighbours(self):
+        """Values just inside the FOV range are accepted."""
+        assert DistanceCalculator.calculate_distance_fov(1.0, 0.001) > 0
+        assert DistanceCalculator.calculate_distance_fov(1.0, 179.999) > 0

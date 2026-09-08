@@ -212,7 +212,7 @@ class DETRTrainer(ModelTrainer):
         for i in range(self.num_labels):
             coco_gt["categories"].append({"id": i, "name": f"class_{i}"})
 
-        annotation_id = 0
+        annotation_id = 1  # pycocotools treats a matched GT id of 0 as "unmatched"
         image_id = 0
 
         with torch.no_grad():
