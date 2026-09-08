@@ -5,17 +5,22 @@ parametrized test. The hand-written validators and the env-var plumbing get
 individual tests.
 """
 
+import re
+import tomllib
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
 
+import src.config as settings_module
 from src.config import (
     ModelWeightsConfig,
     PathsConfig,
     ScraperConfig,
     Settings,
     TrainingConfig,
+    get_project_version,
 )
 
 
@@ -190,3 +195,25 @@ class TestSettings:
         monkeypatch.setenv("cctv_log_level", "warning")
 
         assert Settings().log_level == "WARNING"
+
+
+class TestGetProjectVersion:
+    """Tests for get_project_version."""
+
+    def test_matches_pyproject(self) -> None:
+        """The reported version is the one declared in pyproject.toml."""
+        pyproject = PathsConfig().project_root / "pyproject.toml"
+        with open(pyproject, "rb") as f:
+            declared = tomllib.load(f)["project"]["version"]
+
+        assert get_project_version() == declared
+        assert re.fullmatch(r"\d+\.\d+\.\d+", declared)
+
+    def test_returns_unknown_when_pyproject_unreadable(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """A missing pyproject.toml degrades to "unknown" instead of raising."""
+        fake_settings = SimpleNamespace(paths=SimpleNamespace(project_root=tmp_path))
+        monkeypatch.setattr(settings_module, "settings", fake_settings)
+
+        assert get_project_version() == "unknown"

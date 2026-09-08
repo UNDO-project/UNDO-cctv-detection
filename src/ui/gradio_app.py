@@ -7,7 +7,7 @@ import gradio as gr
 from PIL import Image
 
 from src.application.metrics_aggregator import MetricsAggregator
-from src.config import settings
+from src.config import get_project_version, settings
 from src.domain.services.object_detector import ObjectDetector
 from src.infrastructure.detector_factory import DetectorFactory, ModelType
 from src.infrastructure.device_selector import DeviceSelector
@@ -482,7 +482,7 @@ def create_demo() -> gr.Blocks:
                     f"""
                     ### CCTV Detection System
 
-                    **Version:** 1.0.0
+                    **Version:** {get_project_version()}
                     **Device:** {app.device}
 
                     #### Model Details
