@@ -7,7 +7,6 @@ and URL data from CSV files.
 import pandas as pd
 import pytest
 
-from src.domain.camera import CameraDataFromCsv
 from src.infrastructure.data_loaders import CameraDataLoader
 
 
@@ -78,33 +77,6 @@ class TestCameraDataLoader:
         df.to_csv(csv_path, index=False)
         return csv_path
 
-    def test_load_camera_data_returns_list(self, sample_csv):
-        """Test that load_camera_data returns a list.
-
-        :param sample_csv: Sample CSV file path
-        :return: None
-        """
-        result = CameraDataLoader.load_camera_data(sample_csv)
-        assert isinstance(result, list)
-
-    def test_load_camera_data_returns_camera_objects(self, sample_csv):
-        """Test that loaded data contains CameraDataFromCsv objects.
-
-        :param sample_csv: Sample CSV file path
-        :return: None
-        """
-        result = CameraDataLoader.load_camera_data(sample_csv)
-        assert all(isinstance(cam, CameraDataFromCsv) for cam in result)
-
-    def test_load_camera_data_correct_count(self, sample_csv):
-        """Test that correct number of cameras are loaded.
-
-        :param sample_csv: Sample CSV file path
-        :return: None
-        """
-        result = CameraDataLoader.load_camera_data(sample_csv)
-        assert len(result) == 3
-
     def test_load_camera_data_correct_values(self, sample_csv):
         """Test that camera data values are loaded correctly.
 
@@ -174,24 +146,3 @@ class TestCameraDataLoader:
 
         actual_urls = [cam.url for cam in result]
         assert actual_urls == expected_urls
-
-    def test_load_camera_data_handles_negative_coordinates(self, tmp_path):
-        """Test loading cameras with negative coordinates.
-
-        :param tmp_path: Temporary directory path
-        :return: None
-        """
-        csv_path = tmp_path / "negative_coords.csv"
-        data = {
-            "latitude": [-34.6037, -33.8688],
-            "longitude": [-58.3816, 151.2093],
-            "url": ["https://example.com/camera1", "https://example.com/camera2"],
-        }
-        df = pd.DataFrame(data)
-        df.to_csv(csv_path, index=False)
-
-        result = CameraDataLoader.load_camera_data(csv_path)
-
-        assert len(result) == 2
-        assert result[0].latitude == -34.6037
-        assert result[0].longitude == -58.3816

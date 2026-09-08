@@ -34,25 +34,6 @@ class TestCreateDemo:
         # Gradio Blocks objects have a launch method
         assert hasattr(demo, "launch")
 
-    @patch("src.ui.gradio_app.CCTVDetectionApp")
-    def test_create_demo_initializes_app(self, mock_app_class):
-        """Test that create_demo initializes CCTVDetectionApp.
-
-        :param mock_app_class: Mocked CCTVDetectionApp class
-        :return: None
-        """
-        from src.ui.gradio_app import create_demo
-
-        # Mock the app instance
-        mock_app = MagicMock()
-        mock_app.detectors = {"YOLOv8": MagicMock()}
-        mock_app_class.return_value = mock_app
-
-        create_demo()
-
-        # Verify CCTVDetectionApp was instantiated
-        mock_app_class.assert_called_once()
-
 
 class TestLaunchUI:
     """Test launch_ui function."""

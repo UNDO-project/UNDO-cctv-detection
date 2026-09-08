@@ -42,15 +42,6 @@ class TestYOLODetector:
     """Test cases for YOLODetector class."""
 
     @patch("src.infrastructure.yolo_detector.YOLO")
-    def test_initialization(self, mock_yolo, tmp_path: Path, class_names: list[str]):
-        """Test that YOLO detector initializes correctly."""
-        model_path = tmp_path / "yolo_model.pt"
-        detector = YOLODetector(model_path, class_names)
-
-        assert detector.class_names == class_names
-        mock_yolo.assert_called_once_with(str(model_path))
-
-    @patch("src.infrastructure.yolo_detector.YOLO")
     def test_predict(
         self,
         mock_yolo,

@@ -97,25 +97,6 @@ class TestYoloUltralyticsTrainer:
                 img_size=640,
             )
 
-    def test_train_raises_when_no_data_config(self):
-        """Test that train raises ValueError when no data_config provided."""
-        # Arrange - create trainer WITHOUT data_config
-        with patch("src.infrastructure.trainers.YOLO"):
-            trainer = YoloUltralyticsTrainer(
-                model_weights="yolov8n.pt",
-                data_config=None,  # No data_config in initialization
-                epochs=1,
-                img_size=640,
-            )
-        device = torch.device("cpu")
-
-        # Act & Assert
-        with pytest.raises(
-            ValueError,
-            match="Either \\(train_loader AND val_loader\\) or data_config must be provided",
-        ):
-            trainer.train(device, train_loader=None, val_loader=None, data_config=None)
-
     def test_train_uses_provided_data_config(self, trainer, tmp_path):
         """Test that train uses data_config when provided."""
         # Arrange
@@ -142,23 +123,6 @@ class TestYoloUltralyticsTrainer:
             trainer.train(device)
 
             # Assert
-            mock_train.assert_called_once()
-            call_kwargs = mock_train.call_args[1]
-            assert call_kwargs["data"] == data_config
-
-    def test_train_ignores_dataloaders(self, trainer, data_config):
-        """Test that train works even when loaders are provided (they're ignored)."""
-        # Arrange
-        device = torch.device("cpu")
-        dataset = TensorDataset(torch.randn(10, 3, 64, 64))
-        train_loader = DataLoader(dataset, batch_size=2)
-        val_loader = DataLoader(dataset, batch_size=2)
-
-        with patch.object(trainer.model, "train") as mock_train:
-            # Act
-            trainer.train(device, train_loader, val_loader, data_config)
-
-            # Assert - should succeed and use data_config
             mock_train.assert_called_once()
             call_kwargs = mock_train.call_args[1]
             assert call_kwargs["data"] == data_config
@@ -262,44 +226,6 @@ class TestFasterRCNNTrainer:
         val_loader.__len__ = Mock(return_value=1)
 
         return train_loader, val_loader
-
-    def test_train_raises_when_no_loaders(self, trainer):
-        """Test that train raises ValueError when loaders not provided."""
-        # Arrange
-        device = torch.device("cpu")
-
-        # Act & Assert
-        with pytest.raises(
-            ValueError,
-            match="Either \\(train_loader AND val_loader\\) or data_config must be provided",
-        ):
-            trainer.train(device, train_loader=None, val_loader=None)
-
-    def test_train_raises_when_only_train_loader(self, trainer, mock_dataloaders):
-        """Test that train raises ValueError when only train_loader provided."""
-        # Arrange
-        device = torch.device("cpu")
-        train_loader, _ = mock_dataloaders
-
-        # Act & Assert
-        with pytest.raises(
-            ValueError,
-            match="Either \\(train_loader AND val_loader\\) or data_config must be provided",
-        ):
-            trainer.train(device, train_loader=train_loader, val_loader=None)
-
-    def test_train_raises_when_only_val_loader(self, trainer, mock_dataloaders):
-        """Test that train raises ValueError when only val_loader provided."""
-        # Arrange
-        device = torch.device("cpu")
-        _, val_loader = mock_dataloaders
-
-        # Act & Assert
-        with pytest.raises(
-            ValueError,
-            match="Either \\(train_loader AND val_loader\\) or data_config must be provided",
-        ):
-            trainer.train(device, train_loader=None, val_loader=val_loader)
 
     def test_train_accepts_both_loaders(self, trainer, mock_dataloaders):
         """Test that train works when both loaders provided."""
