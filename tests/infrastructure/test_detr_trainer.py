@@ -74,36 +74,58 @@ class TestDETRTrainer:
             with pytest.raises(ValueError, match="train_loader"):
                 trainer.train(device=torch.device("cpu"), train_loader=train_loader)
 
-    def test_train_with_mocked_components(self):
-        """Test training with mocked HuggingFace components."""
+    def test_train_with_mocked_components(self, tmp_path: Path):
+        """Test that train maps hyperparameters into the HuggingFace Trainer."""
         with (
             patch("src.infrastructure.detr_trainer.DetrImageProcessor"),
             patch("src.infrastructure.detr_trainer.DetrForObjectDetection"),
+            patch("src.infrastructure.detr_trainer.TrainingArguments") as mock_args,
             patch("src.infrastructure.detr_trainer.Trainer") as mock_trainer_class,
         ):
-            # Setup mock trainer
             mock_trainer_instance = MagicMock()
             mock_trainer_class.return_value = mock_trainer_instance
 
-            # Create trainer
-            trainer = DETRTrainer(num_labels=2, epochs=1, batch_size=2)
+            trainer = DETRTrainer(
+                num_labels=2,
+                epochs=3,
+                learning_rate=5e-5,
+                batch_size=2,
+                output_dir=tmp_path / "detr",
+            )
 
-            # Create dummy dataloaders
-            dummy_data = TensorDataset(torch.randn(10, 3, 224, 224))
-            train_loader = DataLoader(dummy_data, batch_size=2)
-            val_loader = DataLoader(dummy_data, batch_size=2)
+            train_data = TensorDataset(torch.randn(10, 3, 224, 224))
+            val_data = TensorDataset(torch.randn(4, 3, 224, 224))
+            train_loader = DataLoader(train_data, batch_size=2)
+            val_loader = DataLoader(val_data, batch_size=2)
 
-            # Train
             trainer.train(
                 device=torch.device("cpu"),
                 train_loader=train_loader,
                 val_loader=val_loader,
             )
 
-            # Verify trainer was called
-            mock_trainer_class.assert_called_once()
+            # Hyperparameters reach TrainingArguments
+            args_kwargs = mock_args.call_args.kwargs
+            assert args_kwargs["output_dir"] == str(tmp_path / "detr")
+            assert args_kwargs["num_train_epochs"] == 3
+            assert args_kwargs["learning_rate"] == 5e-5
+            assert args_kwargs["per_device_train_batch_size"] == 2
+            assert args_kwargs["per_device_eval_batch_size"] == 2
+            assert args_kwargs["remove_unused_columns"] is False
+
+            # Datasets, collator and processor are wired into the Trainer
+            trainer_kwargs = mock_trainer_class.call_args.kwargs
+            assert trainer_kwargs["args"] is mock_args.return_value
+            assert trainer_kwargs["train_dataset"] is train_data
+            assert trainer_kwargs["eval_dataset"] is val_data
+            assert trainer_kwargs["data_collator"] is DETRTrainer.collate_fn
+            assert trainer_kwargs["model"] is trainer.model
+            assert trainer_kwargs["processing_class"] is trainer.processor
+
             mock_trainer_instance.train.assert_called_once()
-            mock_trainer_instance.save_model.assert_called_once()
+            mock_trainer_instance.save_model.assert_called_once_with(
+                str(tmp_path / "detr" / "final")
+            )
 
     def test_save_weights(self, tmp_path: Path):
         """Test that model weights can be saved."""

@@ -4,9 +4,10 @@ This module tests the DatasetPreparation service which orchestrates
 dataset preparation by converting HEIC images to JPG format.
 """
 
-import pytest
-from unittest.mock import Mock
 from pathlib import Path
+from unittest.mock import Mock
+
+import pytest
 
 from src.application.dataset_preparation import DatasetPreparation
 

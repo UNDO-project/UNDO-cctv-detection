@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, RandomSampler
 
 from src.application.training_service import TrainingService
 
@@ -208,7 +208,7 @@ class TestTrainingService:
     def test_run_training_creates_shuffled_train_loader(
         self, service, mock_splitter, mock_trainer
     ):
-        """Test that training DataLoader is created with shuffle=True."""
+        """Test that the train loader is built with a shuffling sampler."""
         # Arrange
         mock_train = MockDataset(70)
         mock_val = MockDataset(20)
@@ -218,14 +218,11 @@ class TestTrainingService:
         # Act
         service.run_training()
 
-        # Assert
-        call_args = mock_trainer.train.call_args[0]
-        # New interface: device is first, then loaders
-        train_loader = call_args[1]
-
-        # Training loader should have shuffle enabled
-        # Note: We can't directly check shuffle, but we verify the loader was created
-        assert train_loader is not None
+        # Assert - shuffle=True gives a RandomSampler
+        _, train_loader, val_loader = mock_trainer.train.call_args[0]
+        assert isinstance(train_loader.sampler, RandomSampler)
+        assert train_loader.dataset is mock_train
+        assert val_loader.dataset is mock_val
 
     def test_run_training_workflow_execution_order(
         self, service, mock_splitter, mock_trainer

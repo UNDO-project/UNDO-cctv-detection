@@ -4,11 +4,11 @@ This module tests the CameraDataLoader which loads camera location
 and URL data from CSV files.
 """
 
-import pytest
 import pandas as pd
+import pytest
 
-from src.infrastructure.data_loaders import CameraDataLoader
 from src.domain.camera import CameraDataFromCsv
+from src.infrastructure.data_loaders import CameraDataLoader
 
 
 class TestCameraDataLoader:

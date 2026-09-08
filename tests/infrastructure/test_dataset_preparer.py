@@ -1,8 +1,8 @@
 """Integration tests for SklearnDatasetPreparer."""
 
+import numpy as np
 import pytest
 from PIL import Image
-import numpy as np
 
 from src.infrastructure.dataset_preparer_impl import SklearnDatasetPreparer
 
@@ -232,7 +232,7 @@ class TestSklearnDatasetPreparer:
         assert total == 6  # Only images with labels
 
     def test_prepare_ultralytics_dataset_with_empty_source(self, preparer, tmp_path):
-        """Test behavior with empty source directory."""
+        """An empty source directory produces no output directories."""
         source_images = tmp_path / "empty_images"
         source_labels = tmp_path / "empty_labels"
         source_images.mkdir()
@@ -241,7 +241,6 @@ class TestSklearnDatasetPreparer:
         output_images = tmp_path / "output_images"
         output_labels = tmp_path / "output_labels"
 
-        # Should handle gracefully
         preparer.prepare_ultralytics_dataset(
             source_images=source_images,
             source_labels=source_labels,
@@ -251,6 +250,38 @@ class TestSklearnDatasetPreparer:
             val_ratio=0.2,
             move_files=False,
         )
+
+        assert not output_images.exists()
+        assert not output_labels.exists()
+
+    def test_prepare_ultralytics_dataset_aborts_when_no_image_has_a_label(
+        self, preparer, tmp_path
+    ):
+        """Images without any matching labels abort before creating output."""
+        source_images = tmp_path / "images"
+        source_labels = tmp_path / "labels"
+        source_images.mkdir()
+        source_labels.mkdir()
+        for i in range(3):
+            (source_images / f"img_{i}.jpg").write_bytes(b"fake")
+
+        output_images = tmp_path / "output_images"
+        output_labels = tmp_path / "output_labels"
+
+        preparer.prepare_ultralytics_dataset(
+            source_images=source_images,
+            source_labels=source_labels,
+            output_images=output_images,
+            output_labels=output_labels,
+            train_ratio=0.7,
+            val_ratio=0.2,
+            move_files=True,
+        )
+
+        assert not output_images.exists()
+        assert not output_labels.exists()
+        # Nothing was moved either
+        assert len(list(source_images.glob("*.jpg"))) == 3
 
         # No output directories should be created if no data
         # (or they exist but are empty - both behaviors are acceptable)

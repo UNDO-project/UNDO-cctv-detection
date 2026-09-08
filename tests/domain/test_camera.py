@@ -4,7 +4,10 @@ This module tests the CameraDataFromCsv dataclass which represents
 camera location and URL data extracted from CSV files.
 """
 
+from dataclasses import FrozenInstanceError
+
 import pytest
+
 from src.domain.camera import CameraDataFromCsv
 
 
@@ -34,7 +37,7 @@ class TestCameraDataFromCsv:
         )
 
         # Attempting to modify should raise FrozenInstanceError
-        with pytest.raises(Exception):  # dataclasses.FrozenInstanceError
+        with pytest.raises(FrozenInstanceError):
             camera.latitude = 100.0
 
     def test_camera_equality(self):

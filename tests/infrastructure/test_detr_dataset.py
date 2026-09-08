@@ -110,11 +110,15 @@ class TestDETRDataPreparer:
 
         assert ann["image_id"] == 0
         assert str(img_path) == ann["image_path"]
-        assert len(ann["boxes"]) == 2
-        assert len(ann["category_ids"]) == 2
         assert ann["category_ids"] == [0, 1]
-        assert len(ann["area"]) == 2
-        assert len(ann["iscrowd"]) == 2
+        # 640x480 image: (0.5, 0.5, 0.2, 0.3) -> x=256, y=168, w=128, h=144
+        #                (0.3, 0.3, 0.1, 0.1) -> x=160, y=120, w=64,  h=48
+        assert ann["boxes"] == [
+            pytest.approx([256.0, 168.0, 128.0, 144.0]),
+            pytest.approx([160.0, 120.0, 64.0, 48.0]),
+        ]
+        assert ann["area"] == [pytest.approx(128 * 144), pytest.approx(64 * 48)]
+        assert ann["iscrowd"] == [0, 0]
 
     def test_prepare_annotations_with_invalid_lines(self, tmp_path: Path):
         """Test that invalid label lines are skipped."""
@@ -259,10 +263,24 @@ class TestDETRDataset:
         # Get item
         item = dataset[0]
 
-        # Verify processor was called
-        mock_processor.assert_called_once()
+        # Verify the COCO-style target handed to the processor
+        kwargs = mock_processor.call_args.kwargs
+        assert kwargs["images"] is mock_img
+        assert kwargs["return_tensors"] == "pt"
+        assert kwargs["annotations"] == {
+            "image_id": 0,
+            "annotations": [
+                {
+                    "bbox": [100.0, 100.0, 200.0, 200.0],
+                    "category_id": 0,
+                    "area": 10000.0,
+                    "iscrowd": 0,
+                }
+            ],
+        }
+        # Batch dimension is squeezed away; labels come from the first element
         assert item["pixel_values"].shape == (3, 800, 800)
-        assert "class_labels" in item["labels"]
+        assert item["labels"] == mock_processor.return_value["labels"][0]
 
     def test_empty_dataset(self):
         """Test dataset with no samples."""

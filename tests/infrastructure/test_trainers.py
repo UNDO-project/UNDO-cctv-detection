@@ -323,18 +323,23 @@ class TestFasterRCNNTrainer:
             patch.object(trainer.model, "train"),
             patch.object(trainer.model, "to", return_value=trainer.model),
         ):
-            # Act - should not raise
-            trainer.train(device, train_loader, val_loader)
+            # Act
+            result = trainer.train(device, train_loader, val_loader)
+
+        # Assert - one epoch, loss is the sum of the two mocked components
+        assert result["epochs"] == 1
+        assert result["train_losses"] == [pytest.approx(0.8)]
+        assert result["val_losses"] == [pytest.approx(0.8)]
 
     def test_build_model_returns_faster_rcnn(self, trainer):
-        """Test that build_model returns a FasterRCNN model."""
+        """Test that build_model replaces the head with one sized for num_classes."""
         # Act
         model = trainer.build_model()
 
-        # Assert
-        assert model is not None
-        assert hasattr(model, "roi_heads")
-        assert hasattr(model.roi_heads, "box_predictor")
+        # Assert - the only thing build_model changes is the predictor head
+        predictor = model.roi_heads.box_predictor
+        assert predictor.cls_score.out_features == 3
+        assert predictor.bbox_pred.out_features == 3 * 4
 
 
 class TestFasterRCNNEvaluateMap:

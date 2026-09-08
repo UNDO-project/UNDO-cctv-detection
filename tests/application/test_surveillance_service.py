@@ -1,7 +1,9 @@
 """Unit tests for SurveillanceService application service."""
 
-import pytest
 from unittest.mock import Mock
+
+import pytest
+
 from src.application.surveillance_service import SurveillanceService
 from src.domain.services.distance_calculator import DoriLevel
 

@@ -1,8 +1,8 @@
 """Shared pytest fixtures for CCTV detection tests."""
 
+import numpy as np
 import pytest
 from PIL import Image
-import numpy as np
 
 
 @pytest.fixture

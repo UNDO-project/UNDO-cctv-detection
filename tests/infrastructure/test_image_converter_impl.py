@@ -4,8 +4,9 @@ This module tests the PillowImageConverter which converts HEIC images
 to JPEG format using Pillow and pillow_heif.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from src.infrastructure.image_converter_impl import PillowImageConverter
 

@@ -1,6 +1,7 @@
 """Integration tests for SklearnDatasetSplitter."""
 
 import pytest
+
 from src.infrastructure.splitters import SklearnDatasetSplitter
 
 
