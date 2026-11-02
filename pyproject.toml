@@ -24,7 +24,7 @@ classifiers = [
 
 # Core dependencies
 dependencies = [
-    "pillow>=12.2.0",
+    "pillow>=13.0.0",
     "pillow-heif>=0.21.0",
     "loguru>=0.7.3",
     "playwright>=1.47.0",
@@ -115,6 +115,11 @@ explicit = true
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 torchvision = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[tool.uv]
+# TEMPORARY: gradio 6.x caps pillow at <13, but every open pillow advisory is
+# fixed only in 13.0.0. Remove this override once gradio allows pillow>=13.
+override-dependencies = ["pillow>=13.0.0"]
 
 [tool.ruff]
 # Python version target
